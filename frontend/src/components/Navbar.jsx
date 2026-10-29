@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
 import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom';
-import { Bell, CarFront, Menu, Home, UserPlus, LayoutDashboard, Car, CalendarDays, ReceiptText, BellRing, FileText, Wrench, ClipboardList, CheckCircle2, Users, Building2, Settings2, LogOut } from 'lucide-react';
+import { Bell, CarFront, Menu, Home, UserPlus, LayoutDashboard, Car, CalendarDays, ReceiptText, BellRing, FileText, Wrench, ClipboardList, CheckCircle2, Users, Building2, Settings2, LogOut, Activity } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
 const roleLinks = {
   OWNER: [
-    ['Dashboard', '/owner/dashboard', LayoutDashboard], ['My Vehicles', '/owner/vehicles', Car], ['Bookings', '/owner/bookings', CalendarDays],
+    ['Dashboard', '/owner/dashboard', LayoutDashboard], ['My Vehicles', '/owner/vehicles', Car], ['Predictions', '/owner/predictions', Activity], ['Bookings', '/owner/bookings', CalendarDays],
     ['Invoices', '/owner/invoices', ReceiptText], ['Reminders', '/owner/reminders', BellRing], ['Documents', '/owner/documents', FileText],
   ],
   MECHANIC: [

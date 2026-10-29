@@ -17,6 +17,7 @@ export const Login = () => {
   // Check if redirected due to expired session
   const queryParams = new URLSearchParams(location.search);
   const isExpired = queryParams.get('expired') === '1';
+  const notice = location.state?.message;
 
   const handleChange = (e) => {
     setFormData((prev) => ({
@@ -69,6 +70,8 @@ export const Login = () => {
             Your session has expired. Please sign in again.
           </div>
         )}
+
+        {notice && <div role="status" className="p-3 text-sm text-green-800 bg-green-50 rounded-lg border border-green-200">{notice}</div>}
 
         {error && (
           <div className="p-3 text-sm text-red-800 bg-red-50 rounded-lg border border-red-200">
@@ -135,6 +138,9 @@ export const Login = () => {
               placeholder="••••••••"
               className="w-full px-3.5 py-2.5 bg-white border border-slate-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
             />
+            <div className="mt-2 text-right">
+              <Link to="/forgot-password" className="text-sm font-semibold text-blue-600 hover:text-blue-500">Forgot password?</Link>
+            </div>
           </div>
 
           <button
