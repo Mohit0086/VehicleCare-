@@ -23,7 +23,7 @@ records; there are no sample records inserted by registration.
 Run `npm run create-admin` in `backend`. Enter a name, email, phone and the new
 password twice. Password input is hidden. This creates a real admin or resets
 an existing admin account's password; it does not convert customer accounts into
-admins. Sign in at the same /login page. The command requires database access.
+admins. Sign in at /admin/login. The command requires database access.
 
 Old demo credentials in README.md and seed.sql are not a reliable login method.
 Create your own accounts. Public registration refuses privileged roles.
@@ -49,9 +49,10 @@ administrator. On a local MariaDB installation with root socket authentication:
 sudo mariadb < database/migrations/001-garage-role.sql
 ```
 
-Fresh installs get the role through `database/schema.sql`. Use **Register a
-garage** on the sign-in page to submit a workshop. Sign in as **Platform admin**
-to approve it under **Service Centers**. Approved workshops appear in the
+Fresh installs get the role through `database/schema.sql`. Choose **Garage**
+on the sign-in or registration page to find the garage registration form.
+Platform admins sign in at `/admin/login` and approve workshops under
+**Service Centers**. Approved workshops appear in the
 customer booking form. Sign in as **Garage** to manage that workshop's bookings
 and download its invoices. A garage can sign in and check its approval status
 while approval is pending.

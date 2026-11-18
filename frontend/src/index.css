@@ -29,9 +29,81 @@
 .brand{font-size:22px;letter-spacing:-1px}.brand-mark{background:#a64225;border-radius:3px}.brand-accent{color:#a64225}
 .button{border-radius:4px}.sidebar{background:#faf9f5}.side-link{border-radius:4px}.topbar{background:#faf9f5;border-color:#e3e0d8;backdrop-filter:none}.avatar{background:#f0e5dc;color:#84341e}
 .motoring-home{background:#faf9f5;color:#252824}.motoring-hero{max-width:1440px;margin:auto;display:grid;grid-template-columns:1fr 1.05fr;min-height:690px;padding:36px 48px 44px;gap:56px}.hero-copy{padding:38px 0 0 12px;display:flex;flex-direction:column;align-items:flex-start}.motoring-kicker{font-size:10px;line-height:1.6;letter-spacing:.16em;font-weight:700;display:flex;align-items:center;gap:10px}.motoring-kicker>span{width:7px;height:7px;background:#a64225}.hero-copy h1{font-size:clamp(60px,6.3vw,94px);font-weight:500;line-height:1.01;letter-spacing:-.065em;margin:30px 0 24px}.hero-copy h1 em{font-family:'Libre Caslon Display',Georgia,serif;font-weight:400;letter-spacing:-.035em;color:#a64225}.hero-description{font-size:15px;line-height:1.85;color:#686960;max-width:370px;margin:0}.hero-actions{margin-top:30px;display:flex;flex-direction:column;align-items:flex-start;gap:20px}.motoring-button{display:inline-flex;align-items:center;justify-content:space-between;gap:32px;background:#a64225;color:white;padding:16px 21px;font-size:13px;font-weight:600;transition:background .2s}.motoring-button:hover{background:#84341e}.motoring-text-link{display:inline-flex;gap:9px;align-items:center;font-size:12px;color:#62655e}.motoring-text-link:hover{text-decoration:underline}.hero-footnote{margin-top:42px;border-top:1px solid #dcdcd2;padding-top:17px;width:100%}.hero-footnote span{font-size:9px;letter-spacing:.14em;color:#777970}.hero-footnote p{font-size:12px;margin:7px 0;color:#62655e}.hero-photograph{margin:0;background:#343b38;position:relative;min-height:620px;overflow:hidden}.hero-photograph img{width:100%;height:100%;object-fit:cover;object-position:54% center;position:absolute;inset:0}.hero-photograph:after{content:'';position:absolute;inset:45% 0 0;background:linear-gradient(transparent,rgba(17,23,20,.85))}.hero-photograph figcaption{position:absolute;bottom:35px;left:35px;right:35px;z-index:1;color:#fff}.hero-photograph figcaption>span{font-size:9px;letter-spacing:.18em;color:#e5e5dd}.hero-photograph figcaption p{font-family:'Libre Caslon Display',Georgia,serif;font-size:40px;line-height:1.1;margin:18px 0}.photo-rule{display:block;width:50px;border-bottom:2px solid #d88a66;padding-top:8px}.motoring-index{max-width:1320px;margin:auto;border-top:1px solid #dcdcd2;border-bottom:1px solid #dcdcd2;padding:22px 0;display:flex;justify-content:space-between;gap:20px}.motoring-index>span{font-size:10px;font-weight:600;letter-spacing:.12em;color:#62655e}.motoring-index a{display:flex;align-items:center;gap:24px;font-size:12px}.motoring-services{max-width:1320px;margin:auto;padding:85px 0 95px}.services-heading{display:grid;grid-template-columns:1fr 1.5fr 1fr;align-items:start;gap:40px}.services-heading .motoring-kicker{color:#a64225}.services-heading h2,.motoring-closing h2{font-size:42px;font-weight:500;letter-spacing:-.045em;line-height:1.12;margin:0}.services-heading>p:last-child{font-size:14px;line-height:1.8;color:#686960;margin:0}.services-list{display:grid;grid-template-columns:repeat(3,1fr);margin-top:55px;border-top:1px solid #dcdcd2}.services-list article{padding:28px 30px 0 0}.services-list article+article{padding-left:30px;border-left:1px solid #dcdcd2}.service-topline{display:flex;justify-content:space-between;color:#a64225;align-items:center}.service-topline span{font-size:11px;font-variant-numeric:tabular-nums;color:#87897f}.services-list h3{font-size:23px;font-weight:500;letter-spacing:-.04em;margin:24px 0 12px}.services-list article>p{font-size:14px;line-height:1.8;color:#686960;max-width:330px}.services-list article>a{display:flex;gap:20px;align-items:center;margin-top:25px;font-size:12px;font-weight:600}.services-list article>a:hover{color:#a64225}.motoring-closing{background:#252e29;color:#faf9f5;display:grid;grid-template-columns:1.5fr 1fr;gap:40px;padding:60px max(30px,calc((100vw - 1200px)/2))}.motoring-closing .motoring-kicker{color:#d49a7f;margin-bottom:22px}.motoring-closing>div:last-child{align-self:end}.motoring-closing p{font-size:14px;line-height:1.8;color:#c2c7bc;margin-bottom:25px}.motoring-footer{max-width:1320px;margin:auto;display:flex;justify-content:space-between;align-items:center;padding:32px 0;gap:20px}.motoring-footer p,.motoring-footer>span{font-size:11px;color:#777970}.motoring-footer .brand{gap:0;font-size:19px}
-.garage-banner{background:#252e29!important;border-radius:6px!important;box-shadow:none!important;position:relative;overflow:hidden;min-height:220px;padding-right:38%!important}.garage-banner:after{content:'';position:absolute;inset:0 0 0 62%;background:linear-gradient(90deg,#252e29,transparent 45%),url('https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?auto=format&fit=crop&w=900&q=80') center/cover}.garage-banner>*{position:relative;z-index:1}.garage-banner{flex-wrap:wrap}.garage-banner h1{font-weight:500}.garage-banner p{color:#d1d6ce}.garage-banner>div>span{background:transparent;color:#d49a7f;padding:0;letter-spacing:.16em}.garage-banner>a{border-radius:3px;color:#252e29}.auth-layout{background:#f4f2ed!important;gap:0;padding:48px 24px!important}.auth-layout>.auth-card{border-radius:0;box-shadow:none;padding:40px;border-color:#dcdcd2}.auth-photo{width:420px;min-height:640px;align-self:stretch;position:relative;background:#252e29;overflow:hidden;display:flex;align-items:flex-end;padding:34px;color:#fff}.auth-photo img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:.65}.auth-photo p{position:relative;font-family:'Libre Caslon Display',Georgia,serif;font-size:46px;line-height:1.1;margin:0}.auth-card h2{text-align:left;font-size:30px;font-weight:500;letter-spacing:-.04em}.auth-card h2+p{text-align:left;line-height:1.7}.auth-card button[type=submit]{background:#a64225;border-radius:4px}.auth-card input{border-radius:4px}.auth-card a{color:#a64225}
-@media(min-width:1000px){.auth-layout{align-items:stretch!important;min-height:calc(100vh - 80px)}.auth-layout>.auth-card{max-width:460px;display:flex;flex-direction:column;justify-content:center}}
+.garage-banner{background:#252e29!important;border-radius:6px!important;box-shadow:none!important;position:relative;overflow:hidden;min-height:220px;padding-right:38%!important}.garage-banner:after{content:'';position:absolute;inset:0 0 0 62%;background:linear-gradient(90deg,#252e29,transparent 45%),url('https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?auto=format&fit=crop&w=900&q=80') center/cover}.garage-banner>*{position:relative;z-index:1}.garage-banner{flex-wrap:wrap}.garage-banner h1{font-weight:500}.garage-banner p{color:#d1d6ce}.garage-banner>div>span{background:transparent;color:#d49a7f;padding:0;letter-spacing:.16em}.garage-banner>a{border-radius:3px;color:#252e29}.auth-layout {
+  display: flex;
+  justify-content: center;
+  align-items: stretch;
+  min-height: calc(100dvh - 68px);
+  padding: 36px 24px;
+  background: #f4f2ed;
+}
+.auth-card {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 20px;
+  width: min(100%, 460px);
+  min-width: 0;
+  padding: 32px;
+  border: 1px solid #dcdcd2;
+  background: #fff;
+}
+.auth-card-wide { width: min(100%, 540px); }
+.auth-photo {
+  position: relative;
+  width: min(35vw, 380px);
+  min-height: 480px;
+  overflow: hidden;
+  background: #252e29;
+}
+.auth-photo img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.auth-card h1 {
+  margin: 0;
+  font-size: 1.875rem;
+  font-weight: 650;
+  letter-spacing: -.03em;
+  line-height: 1.15;
+}
+.auth-card header p {
+  margin: 8px 0 0;
+  color: #475569;
+  font-size: .875rem;
+  line-height: 1.5;
+}
+.auth-input {
+  width: 100%;
+  min-width: 0;
+  min-height: 44px;
+  border: 1px solid #94a3b8;
+  border-radius: 6px;
+  background: white;
+  padding: 10px 12px;
+  color: #111827;
+  font-size: 1rem;
+}
+.auth-input.pr-12 { padding-right: 48px; }
+.auth-input:focus { outline: 2px solid #a64225; outline-offset: 1px; }
+.auth-submit {
+  min-height: 44px;
+  width: 100%;
+  padding: 10px 16px;
+  border-radius: 6px;
+  background: #a64225;
+  color: #fff;
+  font-size: .875rem;
+  font-weight: 700;
+}
+.auth-submit:not(:disabled):hover { background: #84341e; }
+.auth-submit:focus-visible { outline: 2px solid #84341e; outline-offset: 3px; }
+.auth-submit:disabled { cursor: wait; opacity: .65; }
+
 @media(max-width:1400px){.motoring-index,.motoring-services,.motoring-footer{margin-inline:48px}}
-@media(max-width:1000px){.motoring-hero{gap:30px;padding:25px 28px 35px}.hero-copy{padding-left:0}.hero-copy h1{font-size:68px}.hero-photograph{min-height:590px}.motoring-index,.motoring-services,.motoring-footer{margin-inline:28px}.services-heading{grid-template-columns:1fr 1.5fr}.services-heading>p:last-child{grid-column:2}.auth-photo{display:none}.garage-banner{padding-right:30%!important}.garage-banner:after{left:65%}}
-@media(max-width:640px){.site-header{height:70px;padding-inline:20px}.site-header .brand{font-size:18px}.site-header .brand-mark{width:30px;height:30px}.site-header .top-link{font-size:12px}.site-header .button{padding-inline:12px;font-size:11px}.motoring-hero{grid-template-columns:1fr;gap:30px;padding:20px 20px 30px}.hero-copy{padding-top:15px}.hero-copy h1{font-size:64px;margin:22px 0}.hero-actions{margin-top:25px}.hero-footnote{margin-top:28px}.hero-photograph{min-height:380px}.hero-photograph figcaption{left:25px;bottom:25px}.hero-photograph figcaption p{font-size:34px}.motoring-index,.motoring-services,.motoring-footer{margin-inline:20px}.motoring-index{align-items:flex-start;flex-direction:column;gap:15px}.motoring-services{padding:50px 0}.services-heading{display:block}.services-heading h2{font-size:36px;margin:18px 0}.services-list{grid-template-columns:1fr;margin-top:30px}.services-list article,.services-list article+article{padding:25px 0;border-left:0;border-bottom:1px solid #dcdcd2;padding-bottom:25px}.services-list h3{margin-top:14px}.services-list article>p{max-width:none}.motoring-closing{grid-template-columns:1fr;padding:40px 24px;gap:20px}.motoring-closing h2{font-size:36px}.motoring-footer{align-items:flex-start;flex-direction:column;gap:12px;padding-block:25px}.motoring-footer p{margin:0}.auth-layout>.auth-card{padding:28px 22px}.garage-banner{padding-right:24px!important;min-height:230px}.garage-banner:after{left:30%;opacity:.25}.garage-banner>div{max-width:100%}}
+@media(max-width:1000px){.motoring-hero{gap:30px;padding:25px 28px 35px}.hero-copy{padding-left:0}.hero-copy h1{font-size:68px}.hero-photograph{min-height:590px}.motoring-index,.motoring-services,.motoring-footer{margin-inline:28px}.services-heading{grid-template-columns:1fr 1.5fr}.services-heading>p:last-child{grid-column:2}.auth-layout{align-items:flex-start}.auth-photo{display:none}.garage-banner{padding-right:30%!important}.garage-banner:after{left:65%}}
+@media(max-width:640px){.site-header{height:70px;padding-inline:20px}.site-header .brand{font-size:18px}.site-header .brand-mark{width:30px;height:30px}.site-header .top-link{font-size:12px}.site-header .button{padding-inline:12px;font-size:11px}.motoring-hero{grid-template-columns:1fr;gap:30px;padding:20px 20px 30px}.hero-copy{padding-top:15px}.hero-copy h1{font-size:64px;margin:22px 0}.hero-actions{margin-top:25px}.hero-footnote{margin-top:28px}.hero-photograph{min-height:380px}.hero-photograph figcaption{left:25px;bottom:25px}.hero-photograph figcaption p{font-size:34px}.motoring-index,.motoring-services,.motoring-footer{margin-inline:20px}.motoring-index{align-items:flex-start;flex-direction:column;gap:15px}.motoring-services{padding:50px 0}.services-heading{display:block}.services-heading h2{font-size:36px;margin:18px 0}.services-list{grid-template-columns:1fr;margin-top:30px}.services-list article,.services-list article+article{padding:25px 0;border-left:0;border-bottom:1px solid #dcdcd2;padding-bottom:25px}.services-list h3{margin-top:14px}.services-list article>p{max-width:none}.motoring-closing{grid-template-columns:1fr;padding:40px 24px;gap:20px}.motoring-closing h2{font-size:36px}.motoring-footer{align-items:flex-start;flex-direction:column;gap:12px;padding-block:25px}.motoring-footer p{margin:0}.auth-layout{min-height:calc(100dvh - 70px);padding:20px 12px}.auth-layout>.auth-card{padding:24px 18px}.garage-banner{padding-right:24px!important;min-height:230px}.garage-banner:after{left:30%;opacity:.25}.garage-banner>div{max-width:100%}}
 @media(prefers-reduced-motion:reduce){*,*:before,*:after{scroll-behavior:auto!important;transition:none!important;animation:none!important}}

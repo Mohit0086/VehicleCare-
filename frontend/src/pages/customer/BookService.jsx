@@ -287,7 +287,7 @@ export default function BookService() {
             >
               {step > s.num ? '✓' : s.num}
             </span>
-            <span className="hidden sm:inline">{slot.time_slot}{!slot.available && ' · Full'}</span>
+            <span className="hidden sm:inline">{s.label}</span>
           </button>
         ))}
       </div>

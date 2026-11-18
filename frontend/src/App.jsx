@@ -209,6 +209,7 @@ function AppRoutes() {
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/login" element={<Login />} />
+          <Route path="/admin/login" element={<Login platformAdmin />} />
           <Route path="/register" element={<Register />} />
           <Route path="/register-garage" element={<RegisterGarage />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
