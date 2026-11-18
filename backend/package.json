@@ -5,9 +5,16 @@
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "dev": "node --watch server.js"
+    "dev": "node --watch server.js",
+    "create-admin": "node scripts/create-admin.js",
+    "test:auth": "node --test test/auth.test.js"
   },
-  "keywords": ["vehiclecare", "express", "mysql2", "jwt"],
+  "keywords": [
+    "vehiclecare",
+    "express",
+    "mysql2",
+    "jwt"
+  ],
   "author": "Mohit, Gourav Singh Rathore, Manas Agrawal, Juber Khan",
   "license": "ISC",
   "dependencies": {
@@ -20,5 +27,8 @@
     "mysql2": "^3.9.7",
     "node-cron": "^3.0.3",
     "pdfkit": "^0.15.0"
+  },
+  "allowScripts": {
+    "bcrypt@5.1.1": true
   }
 }

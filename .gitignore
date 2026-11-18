@@ -9,3 +9,11 @@ node_modules/
 
 # Build output
 **/dist/
+
+# Python & SQLite
+__pycache__/
+*.pyc
+*.joblib
+*.sqlite
+uploads/documents/*
+!uploads/documents/.gitkeep

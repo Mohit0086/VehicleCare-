@@ -1,21 +1,21 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
+import { CarFront, ArrowRight, Eye, EyeOff } from 'lucide-react';
 
-export const Register = () => {
+export default function Register() {
   const { register } = useAuth();
   const navigate = useNavigate();
 
-  const [role, setRole] = useState('OWNER');
   const [formData, setFormData] = useState({
     name: '',
     email: '',
     password: '',
     phone: '',
-    centerName: '',
-    address: '',
-    city: '',
+    confirmPassword: '',
   });
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmation, setShowConfirmation] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -27,12 +27,6 @@ export const Register = () => {
     setError('');
   };
 
-  const redirectByRole = (userRole) => {
-    if (userRole === 'ADMIN') navigate('/admin/dashboard');
-    else if (userRole === 'MECHANIC') navigate('/mechanic/jobs');
-    else navigate('/owner/dashboard');
-  };
-
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
@@ -42,31 +36,24 @@ export const Register = () => {
       return;
     }
 
-    if (role === 'MECHANIC' && (!formData.centerName || !formData.address || !formData.city)) {
-      setError('Please provide your workshop details.');
+    if (formData.password !== formData.confirmPassword) {
+      setError('Passwords do not match.');
       return;
     }
 
     setLoading(true);
 
     try {
-      const payload = {
-        name: formData.name,
-        email: formData.email,
+      await register({
+        name: formData.name.trim(),
+        email: formData.email.trim(),
         password: formData.password,
-        phone: formData.phone,
-        role,
-        ...(role === 'MECHANIC' && {
-          centerName: formData.centerName,
-          address: formData.address,
-          city: formData.city,
-        }),
-      };
-
-      const user = await register(payload);
-      redirectByRole(user.role);
+        phone: formData.phone.trim(),
+        role: 'CUSTOMER',
+      });
+      navigate('/customer/dashboard', { replace: true });
     } catch (err) {
-      const msg = err.response?.data?.error || 'Registration failed. Please try again.';
+      const msg = err.response?.data?.error || (err.response ? 'Registration failed. Please try again.' : 'Cannot reach the server. Check that the backend is running on port 5000.');
       setError(msg);
     } finally {
       setLoading(false);
@@ -74,187 +61,158 @@ export const Register = () => {
   };
 
   return (
-    <div className="min-h-[calc(100vh-4rem)] flex items-center justify-center py-10 px-4 sm:px-6 lg:px-8 bg-slate-50">
-      <div className="max-w-md w-full space-y-6 bg-white p-8 rounded-2xl shadow-sm border border-slate-200">
-        <div>
-          <h2 className="text-center text-3xl font-extrabold text-slate-900">
-            Create an Account
+    <div className="min-h-[calc(100vh-4rem)] flex items-center justify-center py-10 px-4 sm:px-6 lg:px-8 bg-slate-50 auth-layout">
+      <aside className="auth-photo"><img src="https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?auto=format&fit=crop&w=900&q=80" alt="Grey car on an open road" width="900" height="1200" /><p>A garage<br />of your own.</p></aside>
+      <div className="auth-card max-w-md w-full space-y-6 bg-white p-8 rounded-3xl shadow-sm border border-slate-200">
+        <div className="text-center">
+          <div className="w-12 h-12 bg-blue-100 text-blue-700 rounded-2xl flex items-center justify-center mx-auto mb-3">
+            <CarFront size={24} />
+          </div>
+          <h2 className="text-2xl font-extrabold text-slate-900">
+            Create your account.
           </h2>
-          <p className="mt-2 text-center text-sm text-slate-600">
-            Join VehicleCare to streamline vehicle health & maintenance
+          <p className="mt-1 text-xs text-slate-500">
+            Sign up to track vehicle maintenance, receive prompt reminders, and schedule services.
           </p>
         </div>
 
         {error && (
-          <div className="p-3 text-sm text-red-800 bg-red-50 rounded-lg border border-red-200">
+          <div role="alert" className="p-3 text-xs font-semibold text-red-800 bg-red-50 rounded-xl border border-red-200">
             {error}
           </div>
         )}
 
-        {/* Role Toggle */}
-        <div>
-          <label className="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-2">
-            I am registering as:
-          </label>
-          <div className="grid grid-cols-2 gap-3">
-            <button
-              type="button"
-              onClick={() => setRole('OWNER')}
-              className={`py-2 px-4 text-sm font-semibold rounded-lg border transition-all ${
-                role === 'OWNER'
-                  ? 'bg-blue-50 border-blue-600 text-blue-700 shadow-sm'
-                  : 'bg-white border-slate-300 text-slate-600 hover:bg-slate-50'
-              }`}
-            >
-              🚗 Vehicle Owner
-            </button>
-            <button
-              type="button"
-              onClick={() => setRole('MECHANIC')}
-              className={`py-2 px-4 text-sm font-semibold rounded-lg border transition-all ${
-                role === 'MECHANIC'
-                  ? 'bg-amber-50 border-amber-600 text-amber-700 shadow-sm'
-                  : 'bg-white border-slate-300 text-slate-600 hover:bg-slate-50'
-              }`}
-            >
-              🔧 Mechanic / Center
-            </button>
-          </div>
-        </div>
-
         <form className="space-y-4" onSubmit={handleSubmit}>
           <div>
-            <label className="block text-sm font-semibold text-slate-700 mb-1">
-              Full Name
+            <label htmlFor="register-name" className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
+              Full Name *
             </label>
             <input
               type="text"
+              id="register-name"
+              autoComplete="name"
               name="name"
               required
               value={formData.name}
               onChange={handleChange}
-              placeholder="e.g. Gourav Singh Rathore"
-              className="w-full px-3.5 py-2.5 bg-white border border-slate-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+              placeholder="e.g. Mohit Sharma"
+              className="w-full px-3.5 py-2.5 bg-white border border-slate-300 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm font-medium"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-semibold text-slate-700 mb-1">
-              Email Address
+            <label htmlFor="register-email" className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
+              Email Address *
             </label>
             <input
               type="email"
+              id="register-email"
+              autoComplete="email"
               name="email"
               required
               value={formData.email}
               onChange={handleChange}
               placeholder="you@example.com"
-              className="w-full px-3.5 py-2.5 bg-white border border-slate-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+              className="w-full px-3.5 py-2.5 bg-white border border-slate-300 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
             />
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div>
-              <label className="block text-sm font-semibold text-slate-700 mb-1">
-                Password
-              </label>
+          <div>
+            <label htmlFor="register-phone" className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
+              Phone number *
+            </label>
+            <input
+              id="register-phone"
+              name="phone"
+              type="tel"
+              autoComplete="tel"
+              required
+              value={formData.phone}
+              onChange={handleChange}
+              pattern="[+0-9 ()-]{7,25}" title="Enter a valid phone number"
+              placeholder="9876543210"
+              className="w-full px-3.5 py-2.5 bg-white border border-slate-300 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+            />
+          </div>
+
+          <div>
+            <label htmlFor="register-password" className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
+              Password *
+            </label>
+            <div className="relative">
               <input
-                type="password"
+                id="register-password"
                 name="password"
+                type={showPassword ? 'text' : 'password'}
+                autoComplete="new-password"
                 required
                 value={formData.password}
                 onChange={handleChange}
-                placeholder="Min 6 characters"
-                className="w-full px-3.5 py-2.5 bg-white border border-slate-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                minLength={6} maxLength={72}
+                placeholder="At least 6 characters"
+                className="w-full pl-3.5 pr-12 py-2.5 bg-white border border-slate-300 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
               />
-            </div>
-            <div>
-              <label className="block text-sm font-semibold text-slate-700 mb-1">
-                Phone Number
-              </label>
-              <input
-                type="tel"
-                name="phone"
-                required
-                value={formData.phone}
-                onChange={handleChange}
-                placeholder="10 digits"
-                className="w-full px-3.5 py-2.5 bg-white border border-slate-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
-              />
+              <button
+                type="button"
+                onClick={() => setShowPassword((visible) => !visible)}
+                aria-label={showPassword ? 'Hide password' : 'Show password'}
+                aria-pressed={showPassword}
+                aria-controls="register-password"
+                className="absolute inset-y-0 right-0 flex w-11 items-center justify-center rounded text-slate-600 hover:text-blue-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600"
+              >
+                {showPassword ? <EyeOff size={18} aria-hidden="true" /> : <Eye size={18} aria-hidden="true" />}
+              </button>
             </div>
           </div>
 
-          {/* Mechanic Workshop Fields */}
-          {role === 'MECHANIC' && (
-            <div className="p-4 bg-amber-50/60 rounded-xl border border-amber-200 space-y-3">
-              <h4 className="text-xs font-bold text-amber-900 uppercase tracking-wide">
-                Workshop / Service Center Details
-              </h4>
-              <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1">
-                  Workshop Name
-                </label>
-                <input
-                  type="text"
-                  name="centerName"
-                  required={role === 'MECHANIC'}
-                  value={formData.centerName}
-                  onChange={handleChange}
-                  placeholder="e.g. SpeedX Motors"
-                  className="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-sm"
-                />
-              </div>
-              <div className="grid grid-cols-2 gap-2">
-                <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">
-                    City
-                  </label>
-                  <input
-                    type="text"
-                    name="city"
-                    required={role === 'MECHANIC'}
-                    value={formData.city}
-                    onChange={handleChange}
-                    placeholder="e.g. Jaipur"
-                    className="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-sm"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">
-                    Address
-                  </label>
-                  <input
-                    type="text"
-                    name="address"
-                    required={role === 'MECHANIC'}
-                    value={formData.address}
-                    onChange={handleChange}
-                    placeholder="Road / Area"
-                    className="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-sm"
-                  />
-                </div>
-              </div>
+          <div>
+            <label htmlFor="register-confirm" className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
+              Confirm password *
+            </label>
+            <div className="relative">
+              <input
+                id="register-confirm"
+                name="confirmPassword"
+                type={showConfirmation ? 'text' : 'password'}
+                autoComplete="new-password"
+                required
+                value={formData.confirmPassword}
+                onChange={handleChange}
+                minLength={6} maxLength={72}
+                placeholder="Re-enter your password"
+                className="w-full pl-3.5 pr-12 py-2.5 bg-white border border-slate-300 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+              />
+              <button
+                type="button"
+                onClick={() => setShowConfirmation((visible) => !visible)}
+                aria-label={showConfirmation ? 'Hide confirm password' : 'Show confirm password'}
+                aria-pressed={showConfirmation}
+                aria-controls="register-confirm"
+                className="absolute inset-y-0 right-0 flex w-11 items-center justify-center rounded text-slate-600 hover:text-blue-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600"
+              >
+                {showConfirmation ? <EyeOff size={18} aria-hidden="true" /> : <Eye size={18} aria-hidden="true" />}
+              </button>
             </div>
-          )}
+          </div>
 
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full py-3 px-4 text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-lg shadow transition-colors disabled:opacity-50 mt-4"
-          >
-            {loading ? 'Creating Account...' : 'Complete Registration'}
-          </button>
+          <div className="pt-2">
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full py-3 px-4 text-sm font-bold text-white bg-blue-600 hover:bg-blue-700 rounded-xl shadow transition disabled:opacity-50 flex items-center justify-center gap-2"
+            >
+              {loading ? 'Creating Account…' : 'Complete Registration'} <ArrowRight size={16} />
+            </button>
+          </div>
         </form>
 
-        <p className="text-center text-sm text-slate-600">
-          Already have an account?{' '}
-          <Link to="/login" className="font-semibold text-blue-600 hover:text-blue-500">
-            Sign In
+        <p className="text-center text-xs text-slate-500 pt-2 border-t border-slate-100">
+          Already registered?{' '}
+          <Link to="/login" className="font-bold text-blue-600 hover:text-blue-500">
+            Sign In here
           </Link>
         </p>
       </div>
     </div>
   );
-};
-
-export default Register;
+}

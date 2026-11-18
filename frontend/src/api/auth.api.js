@@ -11,6 +11,10 @@ export const authApi = {
     return response.data;
   },
 
+  registerGarage: async (details) => (await api.post('/auth/register-garage', details)).data,
+
+  getGarage: async () => (await api.get('/auth/garage')).data,
+
   getProfile: async () => {
     const response = await api.get('/auth/profile');
     return response.data;

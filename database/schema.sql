@@ -1,29 +1,44 @@
 -- =====================================================================
 -- VehicleCare Database Schema
 -- Standard: MySQL 8.0+ / 3NF Normalized
+-- Version: 1.1 (Supports FR-1 through FR-49)
 -- =====================================================================
 
 CREATE DATABASE IF NOT EXISTS vehiclecare_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 USE vehiclecare_db;
 
 -- 1. USERS TABLE
--- Handles authentication and role-based access (OWNER, MECHANIC, ADMIN)
+-- Handles authentication, roles (CUSTOMER, ADMIN, OWNER, MECHANIC) and status (FR-1, FR-44)
 CREATE TABLE IF NOT EXISTS users (
     id INT AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(100) NOT NULL,
     email VARCHAR(150) NOT NULL UNIQUE,
     password_hash VARCHAR(255) NOT NULL,
-    role ENUM('OWNER', 'MECHANIC', 'ADMIN') NOT NULL DEFAULT 'OWNER',
+    role ENUM('CUSTOMER', 'ADMIN', 'OWNER', 'MECHANIC', 'GARAGE') NOT NULL DEFAULT 'CUSTOMER',
     phone VARCHAR(20) NOT NULL,
+    is_active BOOLEAN NOT NULL DEFAULT TRUE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     INDEX idx_users_email (email),
     INDEX idx_users_role (role)
 ) ENGINE=InnoDB;
 
--- 2. SERVICE CENTERS TABLE
--- 1:1 business profile tied to a MECHANIC user account.
--- Includes slot_capacity to prevent workshop slot over-booking.
+-- 2. PASSWORD RESETS TABLE
+-- Secure time-limited password reset tokens (FR-46)
+CREATE TABLE IF NOT EXISTS password_resets (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL,
+    token VARCHAR(255) NOT NULL UNIQUE,
+    expires_at DATETIME NOT NULL,
+    used BOOLEAN NOT NULL DEFAULT FALSE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    INDEX idx_resets_token (token)
+) ENGINE=InnoDB;
+
+-- 3. SERVICE CENTERS TABLE
+-- Business profile tied to a MECHANIC user account (FR-47, FR-44).
+-- Mechanic registers center; becomes bookable once admin activates it.
 CREATE TABLE IF NOT EXISTS service_centers (
     id INT AUTO_INCREMENT PRIMARY KEY,
     user_id INT NOT NULL UNIQUE,
@@ -31,15 +46,18 @@ CREATE TABLE IF NOT EXISTS service_centers (
     address TEXT NOT NULL,
     city VARCHAR(100) NOT NULL,
     phone VARCHAR(20) NOT NULL,
+    services_offered TEXT NULL,
     slot_capacity INT NOT NULL DEFAULT 2,
+    is_active BOOLEAN NOT NULL DEFAULT FALSE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE RESTRICT,
-    INDEX idx_centers_city (city)
+    INDEX idx_centers_city (city),
+    INDEX idx_centers_active (is_active)
 ) ENGINE=InnoDB;
 
--- 3. VEHICLES TABLE
--- Belongs to an OWNER user. Tracks current odometer and legal compliance expiries.
+-- 4. VEHICLES TABLE
+-- Belongs to an OWNER user (FR-6, FR-7, FR-8). Tracks odometer & expiries.
 CREATE TABLE IF NOT EXISTS vehicles (
     id INT AUTO_INCREMENT PRIMARY KEY,
     user_id INT NOT NULL,
@@ -58,8 +76,8 @@ CREATE TABLE IF NOT EXISTS vehicles (
     INDEX idx_vehicles_reg (reg_no)
 ) ENGINE=InnoDB;
 
--- 4. ODOMETER LOGS TABLE
--- Immutable audit log: guarantees odometer monotonicity and tamper-evidence.
+-- 5. ODOMETER LOGS TABLE
+-- Monotonic audit log guaranteeing tamper evidence (FR-9, FR-10).
 CREATE TABLE IF NOT EXISTS odometer_logs (
     id INT AUTO_INCREMENT PRIMARY KEY,
     vehicle_id INT NOT NULL,
@@ -73,8 +91,8 @@ CREATE TABLE IF NOT EXISTS odometer_logs (
     INDEX idx_odo_vehicle (vehicle_id, recorded_at DESC)
 ) ENGINE=InnoDB;
 
--- 5. MAINTENANCE TYPES TABLE
--- Standard catalog of components tracked (engine oil, brakes, etc.) with default intervals.
+-- 6. MAINTENANCE TYPES TABLE
+-- Standard catalog of tracked components with configurable intervals (FR-11, FR-16).
 CREATE TABLE IF NOT EXISTS maintenance_types (
     id INT AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(80) NOT NULL UNIQUE,
@@ -85,8 +103,8 @@ CREATE TABLE IF NOT EXISTS maintenance_types (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB;
 
--- 6. VEHICLE MAINTENANCE TABLE
--- Junction table linking each vehicle to its tracked components and service history.
+-- 7. VEHICLE MAINTENANCE TABLE
+-- Junction tracking each vehicle's component status & baseline (FR-12, FR-13, FR-14, FR-48).
 CREATE TABLE IF NOT EXISTS vehicle_maintenance (
     id INT AUTO_INCREMENT PRIMARY KEY,
     vehicle_id INT NOT NULL,
@@ -103,8 +121,8 @@ CREATE TABLE IF NOT EXISTS vehicle_maintenance (
     INDEX idx_vm_vehicle (vehicle_id)
 ) ENGINE=InnoDB;
 
--- 7. BOOKINGS TABLE
--- State machine: PENDING -> ACCEPTED -> IN_PROGRESS -> COMPLETED (or REJECTED from PENDING)
+-- 8. BOOKINGS TABLE
+-- State machine: PENDING -> ACCEPTED -> IN_PROGRESS -> COMPLETED (or REJECTED) (FR-17 to FR-21).
 CREATE TABLE IF NOT EXISTS bookings (
     id INT AUTO_INCREMENT PRIMARY KEY,
     vehicle_id INT NOT NULL,
@@ -126,8 +144,8 @@ CREATE TABLE IF NOT EXISTS bookings (
     INDEX idx_bookings_status (status)
 ) ENGINE=InnoDB;
 
--- 8. JOB ITEMS TABLE
--- Detailed parts and labour line items recorded by mechanic during service.
+-- 9. JOB ITEMS TABLE
+-- Detailed parts and labour recorded by mechanic during service (FR-22).
 CREATE TABLE IF NOT EXISTS job_items (
     id INT AUTO_INCREMENT PRIMARY KEY,
     booking_id INT NOT NULL,
@@ -140,8 +158,8 @@ CREATE TABLE IF NOT EXISTS job_items (
     INDEX idx_job_booking (booking_id)
 ) ENGINE=InnoDB;
 
--- 9. BILLS TABLE
--- Invoice record generated atomically upon booking completion.
+-- 10. BILLS TABLE
+-- Invoice generated atomically upon booking completion (FR-24, FR-25).
 CREATE TABLE IF NOT EXISTS bills (
     id INT AUTO_INCREMENT PRIMARY KEY,
     booking_id INT NOT NULL UNIQUE,
@@ -154,8 +172,8 @@ CREATE TABLE IF NOT EXISTS bills (
     INDEX idx_bills_billno (bill_no)
 ) ENGINE=InnoDB;
 
--- 10. DOCUMENTS TABLE
--- Uploaded vehicle documents (RC, Insurance, PUC) handled via Multer.
+-- 11. DOCUMENTS TABLE
+-- Uploaded vehicle documents (RC, Insurance, PUC) (FR-29).
 CREATE TABLE IF NOT EXISTS documents (
     id INT AUTO_INCREMENT PRIMARY KEY,
     vehicle_id INT NOT NULL,
@@ -170,8 +188,8 @@ CREATE TABLE IF NOT EXISTS documents (
     INDEX idx_docs_vehicle (vehicle_id)
 ) ENGINE=InnoDB;
 
--- 11. REMINDERS TABLE
--- In-app notifications generated by daily node-cron job.
+-- 12. REMINDERS TABLE
+-- Notifications generated by daily cron job (FR-30, FR-31, FR-32, FR-33).
 CREATE TABLE IF NOT EXISTS reminders (
     id INT AUTO_INCREMENT PRIMARY KEY,
     user_id INT NOT NULL,

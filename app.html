@@ -1,0 +1,1059 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>VehicleCare — Live System Application</title>
+  <script src="https://www.gstatic.com/antigravity/web/dev/tailwindcss.min.js"></script>
+  <style>
+    .badge-due { background-color: rgba(239, 68, 68, 0.15); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.3); }
+    .badge-soon { background-color: rgba(245, 158, 11, 0.15); color: #f59e0b; border: 1px solid rgba(245, 158, 11, 0.3); }
+    .badge-ok { background-color: rgba(16, 185, 129, 0.15); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.3); }
+    .tab-btn.active { border-bottom: 2px solid #3b82f6; color: #3b82f6; font-weight: 600; }
+  </style>
+</head>
+<body class="bg-slate-900 text-slate-100 min-h-screen p-0 m-0 font-sans antialiased">
+  <div id="app" class="max-w-6xl mx-auto p-4 sm:p-6 space-y-6">
+
+    <!-- TOP BAR -->
+    <header class="flex flex-wrap items-center justify-between gap-4 pb-4 border-b border-slate-800">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-blue-600 to-indigo-500 flex items-center justify-center shadow-lg shadow-blue-500/20 font-black text-xl text-white">
+          VC
+        </div>
+        <div>
+          <div class="flex items-center gap-2">
+            <h1 class="text-lg font-bold text-white tracking-tight">VehicleCare</h1>
+            <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-400 border border-blue-500/20">v1.1 RGPV / SISTec</span>
+          </div>
+          <p class="text-xs text-slate-400">Smart Vehicle Maintenance & Service Management System</p>
+        </div>
+      </div>
+
+      <!-- ROLE TOGGLE & NOTIFICATION BELL -->
+      <div class="flex items-center gap-3">
+        <!-- Role Switcher -->
+        <div class="bg-slate-800 p-1 rounded-xl border border-slate-700 flex items-center text-xs">
+          <button id="btn-role-customer" onclick="setRole('CUSTOMER')" class="px-3 py-1.5 rounded-lg font-medium transition bg-blue-600 text-white shadow">
+            Customer View
+          </button>
+          <button id="btn-role-admin" onclick="setRole('ADMIN')" class="px-3 py-1.5 rounded-lg font-medium transition text-slate-400 hover:text-white">
+            Admin Workshop Bay
+          </button>
+        </div>
+
+        <!-- Notification Bell Dropdown -->
+        <div class="relative">
+          <button onclick="toggleNotifications()" class="relative p-2 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 transition">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>
+            <span id="notif-badge" class="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center border-2 border-slate-900">3</span>
+          </button>
+
+          <!-- Dropdown Menu -->
+          <div id="notif-dropdown" class="hidden absolute right-0 mt-2 w-80 sm:w-96 bg-slate-800 border border-slate-700 rounded-2xl shadow-2xl z-50 overflow-hidden">
+            <div class="p-3 border-b border-slate-700 flex items-center justify-between">
+              <span class="text-xs font-bold text-white uppercase tracking-wider">Prompt Notifications</span>
+              <button onclick="runDiagnosticScan()" class="text-[11px] font-semibold text-blue-400 hover:text-blue-300 flex items-center gap-1 bg-blue-500/10 px-2 py-1 rounded-lg border border-blue-500/20">
+                <svg class="w-3.5 h-3.5 animate-spin hidden" id="scan-spinner" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path></svg>
+                <span>Run Diagnostic Scan</span>
+              </button>
+            </div>
+            <div id="notif-list" class="max-h-72 overflow-y-auto divide-y divide-slate-700/50 text-xs">
+              <!-- Dynamically populated -->
+            </div>
+            <div class="p-2 border-t border-slate-700 text-center bg-slate-800/80">
+              <button onclick="markAllNotificationsRead()" class="text-xs text-slate-400 hover:text-white">Mark all as read</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- NAVIGATION TABS -->
+    <nav class="flex items-center gap-4 border-b border-slate-800 text-xs overflow-x-auto pb-1">
+      <button onclick="showTab('garage')" id="tab-btn-garage" class="tab-btn active pb-2 flex items-center gap-2 text-slate-300 hover:text-white">
+        <span>🚗</span> My Garage & Health
+      </button>
+      <button onclick="showTab('booking')" id="tab-btn-booking" class="tab-btn pb-2 flex items-center gap-2 text-slate-300 hover:text-white">
+        <span>📅</span> 3-Step Booking Wizard
+      </button>
+      <button onclick="showTab('admin')" id="tab-btn-admin" class="tab-btn pb-2 flex items-center gap-2 text-slate-300 hover:text-white">
+        <span>🔧</span> Admin Workshop Bay
+      </button>
+      <button onclick="showTab('ml')" id="tab-btn-ml" class="tab-btn pb-2 flex items-center gap-2 text-slate-300 hover:text-white">
+        <span>🤖</span> ML Maintenance Prediction
+      </button>
+      <button onclick="showTab('invoices')" id="tab-btn-invoices" class="tab-btn pb-2 flex items-center gap-2 text-slate-300 hover:text-white">
+        <span>📄</span> Invoices & Records
+      </button>
+    </nav>
+
+    <!-- TAB 1: GARAGE & COMPONENT HEALTH -->
+    <section id="tab-garage" class="space-y-6">
+      <!-- Vehicle Selector & Overview Banner -->
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div class="md:col-span-2 bg-slate-800/80 border border-slate-700 rounded-2xl p-5 space-y-4">
+          <div class="flex flex-wrap items-center justify-between gap-2">
+            <div>
+              <span class="text-[10px] font-bold uppercase tracking-wider text-blue-400">Selected Vehicle Profile</span>
+              <h2 id="veh-title" class="text-xl font-bold text-white">Hyundai Creta SX (2022)</h2>
+              <p class="text-xs text-slate-400 font-mono" id="veh-reg">Reg No: RJ14-AB-1234 • Fuel: Petrol</p>
+            </div>
+            <div class="flex items-center gap-2">
+              <select id="vehicle-select" onchange="switchVehicle(this.value)" class="bg-slate-900 border border-slate-700 rounded-xl px-3 py-1.5 text-xs text-white">
+                <option value="1">Hyundai Creta (RJ14-AB-1234)</option>
+                <option value="2">Tata Nexon EV (MH12-CD-5678)</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Odometer & Quick Stats -->
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-2">
+            <div class="bg-slate-900/90 p-3 rounded-xl border border-slate-700/60">
+              <span class="text-[10px] text-slate-400">Current Odometer</span>
+              <div class="text-base font-bold text-white font-mono mt-0.5" id="veh-odometer">18,500 km</div>
+              <button onclick="promptUpdateOdometer()" class="text-[10px] text-blue-400 hover:underline mt-1">+ Update Reading</button>
+            </div>
+            <div class="bg-slate-900/90 p-3 rounded-xl border border-slate-700/60">
+              <span class="text-[10px] text-slate-400">Overall Status</span>
+              <div class="text-sm font-bold text-amber-400 mt-1" id="veh-overall-status">Attention Needed</div>
+              <span class="text-[10px] text-slate-400">1 Overdue • 2 Due Soon</span>
+            </div>
+            <div class="bg-slate-900/90 p-3 rounded-xl border border-slate-700/60">
+              <span class="text-[10px] text-slate-400">PUC Expiry</span>
+              <div class="text-xs font-semibold text-amber-400 mt-1">20 Days Remaining</div>
+              <span class="text-[10px] text-slate-400">Due: 2026-12-07</span>
+            </div>
+            <div class="bg-slate-900/90 p-3 rounded-xl border border-slate-700/60">
+              <span class="text-[10px] text-slate-400">Insurance Expiry</span>
+              <div class="text-xs font-semibold text-emerald-400 mt-1">60 Days Remaining</div>
+              <span class="text-[10px] text-slate-400">Active</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Quick Action Card -->
+        <div class="bg-gradient-to-br from-blue-900/40 to-slate-800 border border-blue-500/30 rounded-2xl p-5 flex flex-col justify-between">
+          <div class="space-y-2">
+            <span class="text-[10px] font-bold text-blue-400 uppercase tracking-wider">Fast Track Booking</span>
+            <h3 class="text-base font-bold text-white">Maintenance Due Soon</h3>
+            <p class="text-xs text-slate-300">
+              Engine Oil and Air Conditioner have crossed inspection thresholds. Book your service at Central Workshop now.
+            </p>
+          </div>
+          <button onclick="goToBookingWizard()" class="w-full mt-4 py-2 px-4 rounded-xl bg-blue-600 hover:bg-blue-500 font-bold text-xs text-white transition shadow-lg shadow-blue-600/30">
+            Open 3-Step Booking Wizard →
+          </button>
+        </div>
+      </div>
+
+      <!-- 8 Component Health Matrix (FR-11 to FR-15, FR-48) -->
+      <div class="bg-slate-800/80 border border-slate-700 rounded-2xl p-5 space-y-4">
+        <div class="flex items-center justify-between">
+          <div>
+            <h3 class="text-sm font-bold text-white">8 Tracked Maintenance Components</h3>
+            <p class="text-xs text-slate-400">Dynamic dual-condition calculation: Distance ($\Delta \text{km}$) vs Months ($\Delta \text{time}$). Earliest decides status.</p>
+          </div>
+          <span class="text-xs font-mono px-2 py-1 rounded bg-slate-900 text-slate-400">FR-11 - FR-15 Compliant</span>
+        </div>
+
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-xs text-slate-300">
+            <thead class="bg-slate-900 text-slate-400 font-bold uppercase text-[10px] border-b border-slate-700">
+              <tr>
+                <th class="py-2.5 px-3">Component</th>
+                <th class="py-2.5 px-3">Interval (km / mo)</th>
+                <th class="py-2.5 px-3">Last Done</th>
+                <th class="py-2.5 px-3">Next Due</th>
+                <th class="py-2.5 px-3">Remaining</th>
+                <th class="py-2.5 px-3">Status</th>
+                <th class="py-2.5 px-3 text-right">Action</th>
+              </tr>
+            </thead>
+            <tbody id="component-rows" class="divide-y divide-slate-700/60 font-mono">
+              <!-- Dynamically populated -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 2: IMPROVED 3-STEP BOOKING WIZARD (Guide Feedback 2) -->
+    <section id="tab-booking" class="hidden space-y-6">
+      <div class="bg-slate-800/80 border border-slate-700 rounded-2xl p-6">
+        <!-- Progress Stepper -->
+        <div class="flex items-center justify-between max-w-2xl mx-auto mb-8">
+          <div class="flex items-center gap-2">
+            <div id="step-badge-1" class="w-8 h-8 rounded-full bg-blue-600 text-white font-bold flex items-center justify-center text-xs shadow-lg shadow-blue-500/30">1</div>
+            <span class="text-xs font-bold text-white">Vehicle</span>
+          </div>
+          <div class="h-0.5 flex-1 mx-4 bg-slate-700" id="step-line-1"></div>
+          <div class="flex items-center gap-2">
+            <div id="step-badge-2" class="w-8 h-8 rounded-full bg-slate-700 text-slate-400 font-bold flex items-center justify-center text-xs">2</div>
+            <span class="text-xs font-bold text-slate-400" id="step-label-2">Services & Price</span>
+          </div>
+          <div class="h-0.5 flex-1 mx-4 bg-slate-700" id="step-line-2"></div>
+          <div class="flex items-center gap-2">
+            <div id="step-badge-3" class="w-8 h-8 rounded-full bg-slate-700 text-slate-400 font-bold flex items-center justify-center text-xs">3</div>
+            <span class="text-xs font-bold text-slate-400" id="step-label-3">Date & Slot</span>
+          </div>
+        </div>
+
+        <!-- STEP 1: VEHICLE PRE-INSPECTION -->
+        <div id="wizard-step-1" class="space-y-4">
+          <h3 class="text-sm font-bold text-white uppercase tracking-wider">Step 1: Vehicle & Health Pre-Inspection</h3>
+          <p class="text-xs text-slate-400">Select which vehicle from your garage requires service. Component health alerts are automatically analyzed.</p>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
+            <div onclick="selectWizardVehicle(1)" id="wiz-card-1" class="p-4 rounded-xl border-2 border-blue-500 bg-slate-900/90 cursor-pointer transition">
+              <div class="flex justify-between items-start">
+                <div>
+                  <h4 class="font-bold text-white text-sm">Hyundai Creta SX (2022)</h4>
+                  <span class="text-xs text-slate-400 font-mono">RJ14-AB-1234 • 18,500 km</span>
+                </div>
+                <span class="badge-soon text-[10px] font-bold px-2 py-0.5 rounded-full">2 Due Soon</span>
+              </div>
+              <p class="text-xs text-amber-400/90 mt-2">Recommended: Engine Oil & AC Service</p>
+            </div>
+
+            <div onclick="selectWizardVehicle(2)" id="wiz-card-2" class="p-4 rounded-xl border border-slate-700 bg-slate-900/60 cursor-pointer transition hover:border-slate-500">
+              <div class="flex justify-between items-start">
+                <div>
+                  <h4 class="font-bold text-white text-sm">Tata Nexon EV (2024)</h4>
+                  <span class="text-xs text-slate-400 font-mono">MH12-CD-5678 • 8,200 km</span>
+                </div>
+                <span class="badge-ok text-[10px] font-bold px-2 py-0.5 rounded-full">All Up to Date</span>
+              </div>
+              <p class="text-xs text-emerald-400/90 mt-2">Routine periodic checkup recommended</p>
+            </div>
+          </div>
+
+          <div class="flex justify-end pt-4">
+            <button onclick="nextWizardStep(2)" class="px-5 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 font-bold text-xs text-white transition">
+              Next: Select Services & Estimated Pricing →
+            </button>
+          </div>
+        </div>
+
+        <!-- STEP 2: SERVICE CATALOG & LIVE PRICING -->
+        <div id="wizard-step-2" class="hidden space-y-4">
+          <div class="flex items-center justify-between">
+            <div>
+              <h3 class="text-sm font-bold text-white uppercase tracking-wider">Step 2: Service Selection & Cost Estimate</h3>
+              <p class="text-xs text-slate-400">Select needed repairs. Real-time estimate updates dynamically.</p>
+            </div>
+            <div class="text-right">
+              <span class="text-[10px] text-slate-400 uppercase">Estimated Total</span>
+              <div class="text-lg font-bold text-emerald-400 font-mono" id="wizard-est-total">₹2,800</div>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 pt-2" id="wizard-catalog">
+            <!-- Dynamically populated catalog items -->
+          </div>
+
+          <div class="flex justify-between pt-4">
+            <button onclick="prevWizardStep(1)" class="px-5 py-2 rounded-xl bg-slate-700 hover:bg-slate-600 font-bold text-xs text-white transition">
+              ← Back
+            </button>
+            <button onclick="nextWizardStep(3)" class="px-5 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 font-bold text-xs text-white transition">
+              Next: Select Date & Time Slot →
+            </button>
+          </div>
+        </div>
+
+        <!-- STEP 3: WORKSHOP & SLOT CAPACITY (FR-18) -->
+        <div id="wizard-step-3" class="hidden space-y-4">
+          <h3 class="text-sm font-bold text-white uppercase tracking-wider">Step 3: Service Center & Real-Time Slot Capacity</h3>
+          <p class="text-xs text-slate-400">Select date and available time slot. Bay capacity is checked live to prevent double-booking.</p>
+
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-2">
+            <div>
+              <label class="text-xs text-slate-400">Service Center</label>
+              <input type="text" value="VehicleCare Central Workshop (Bhopal)" readonly class="w-full mt-1 bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white font-medium" />
+              <span class="text-[10px] text-slate-500">Bay Capacity: 4 vehicles / slot</span>
+            </div>
+
+            <div>
+              <label class="text-xs text-slate-400">Preferred Date</label>
+              <input type="date" id="wizard-date" value="2026-11-20" class="w-full mt-1 bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white font-medium" />
+            </div>
+
+            <div>
+              <label class="text-xs text-slate-400">Time Slot & Availability</label>
+              <div class="grid grid-cols-2 gap-2 mt-1" id="wizard-slots">
+                <button onclick="selectSlot(this, '09:00-11:00')" class="slot-btn active p-2 rounded-lg border border-blue-500 bg-blue-500/10 text-xs text-left">
+                  <div class="font-bold text-white">09:00 - 11:00</div>
+                  <span class="text-[10px] text-emerald-400">4 Bays Available</span>
+                </button>
+                <button onclick="selectSlot(this, '11:00-13:00')" class="slot-btn p-2 rounded-lg border border-slate-700 bg-slate-900 text-xs text-left">
+                  <div class="font-bold text-white">11:00 - 13:00</div>
+                  <span class="text-[10px] text-emerald-400">3 Bays Available</span>
+                </button>
+                <button onclick="selectSlot(this, '14:00-16:00')" class="slot-btn p-2 rounded-lg border border-slate-700 bg-slate-900 text-xs text-left">
+                  <div class="font-bold text-white">14:00 - 16:00</div>
+                  <span class="text-[10px] text-emerald-400">4 Bays Available</span>
+                </button>
+                <button onclick="selectSlot(this, '16:00-18:00')" class="slot-btn p-2 rounded-lg border border-slate-700 bg-slate-900 text-xs text-left">
+                  <div class="font-bold text-white">16:00 - 18:00</div>
+                  <span class="text-[10px] text-amber-400">1 Bay Left</span>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div class="pt-2">
+            <label class="text-xs text-slate-400">Special Instructions / Symptoms (Optional)</label>
+            <textarea id="wizard-notes" rows="2" placeholder="e.g., Brake squealing at low speeds, slight delay in AC cooling..." class="w-full mt-1 bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white"></textarea>
+          </div>
+
+          <div class="flex justify-between pt-4 border-t border-slate-700">
+            <button onclick="prevWizardStep(2)" class="px-5 py-2 rounded-xl bg-slate-700 hover:bg-slate-600 font-bold text-xs text-white transition">
+              ← Back
+            </button>
+            <button onclick="confirmBooking()" class="px-6 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 font-bold text-xs text-white transition shadow-lg shadow-emerald-600/30">
+              Confirm Appointment & Send Prompt Alert →
+            </button>
+          </div>
+        </div>
+
+        <!-- SUCCESS CONFIRMATION MODAL STATE -->
+        <div id="wizard-success" class="hidden text-center py-8 space-y-4">
+          <div class="w-16 h-16 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center mx-auto text-3xl border border-emerald-500/40">
+            ✓
+          </div>
+          <div>
+            <h3 class="text-lg font-bold text-white">Service Appointment Confirmed!</h3>
+            <p class="text-xs text-slate-400" id="wiz-conf-text">Booking #VC-BK-9182 has been scheduled for Hyundai Creta SX.</p>
+          </div>
+          <div class="p-3 bg-slate-900 rounded-xl max-w-md mx-auto text-xs text-blue-400 border border-blue-500/30">
+            🔔 Prompt Notification dispatched to both Customer & Workshop Admin.
+          </div>
+          <div class="pt-2 flex justify-center gap-3">
+            <button onclick="showTab('admin')" class="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-xs font-bold text-white">
+              View in Admin Workshop Bay →
+            </button>
+            <button onclick="resetWizard()" class="px-4 py-2 rounded-xl bg-slate-700 hover:bg-slate-600 text-xs font-bold text-white">
+              Done
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 3: ADMIN WORKSHOP BAY & BILLING MODAL -->
+    <section id="tab-admin" class="hidden space-y-6">
+      <div class="flex flex-wrap items-center justify-between gap-2">
+        <div>
+          <h2 class="text-base font-bold text-white">Central Workshop Management Bay</h2>
+          <p class="text-xs text-slate-400">Workshop Administrator overview of active customer bookings, slot dispatch, and billing.</p>
+        </div>
+        <span class="text-xs font-mono px-3 py-1 bg-blue-500/10 text-blue-400 border border-blue-500/20 rounded-xl">
+          Role: System Administrator (Workshop Manager)
+        </span>
+      </div>
+
+      <!-- Workshop Job Queue -->
+      <div class="bg-slate-800/80 border border-slate-700 rounded-2xl overflow-hidden">
+        <div class="p-4 border-b border-slate-700 flex justify-between items-center">
+          <span class="text-xs font-bold text-white uppercase tracking-wider">Active Workshop Appointments & Queue</span>
+          <span class="text-xs text-slate-400 font-mono" id="admin-booking-count">4 Total Bookings</span>
+        </div>
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-xs text-slate-300">
+            <thead class="bg-slate-900 text-slate-400 font-bold uppercase text-[10px] border-b border-slate-700">
+              <tr>
+                <th class="py-2.5 px-3">Booking ID</th>
+                <th class="py-2.5 px-3">Vehicle & Owner</th>
+                <th class="py-2.5 px-3">Date & Slot</th>
+                <th class="py-2.5 px-3">Requested Services</th>
+                <th class="py-2.5 px-3">Status</th>
+                <th class="py-2.5 px-3 text-right">Workflow Action</th>
+              </tr>
+            </thead>
+            <tbody id="admin-booking-rows" class="divide-y divide-slate-700/60 font-mono">
+              <!-- Dynamically populated -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- INTERACTIVE BILLING MODAL -->
+      <div id="billing-modal" class="hidden fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div class="bg-slate-800 border border-slate-700 rounded-2xl max-w-xl w-full p-5 space-y-4 shadow-2xl">
+          <div class="flex justify-between items-center border-b border-slate-700 pb-3">
+            <div>
+              <h3 class="text-sm font-bold text-white uppercase tracking-wider">Finalize Job & Generate Bill</h3>
+              <p class="text-xs text-slate-400" id="bill-modal-sub">Booking #101 • Hyundai Creta (RJ14-AB-1234)</p>
+            </div>
+            <button onclick="closeBillingModal()" class="text-slate-400 hover:text-white text-base">✕</button>
+          </div>
+
+          <div class="space-y-3">
+            <div>
+              <label class="text-xs text-slate-400">Odometer Reading at Service (FR-21)</label>
+              <input type="number" id="bill-odometer" value="19800" class="w-full mt-1 bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white font-mono" />
+              <span class="text-[10px] text-slate-500">Cannot be less than prior vehicle odometer (18,500 km)</span>
+            </div>
+
+            <div>
+              <div class="flex justify-between items-center mb-1">
+                <label class="text-xs text-slate-400">Parts Used & Labour Charges (FR-22, FR-24)</label>
+              </div>
+              <div class="space-y-2 bg-slate-900 p-3 rounded-xl border border-slate-700/60 text-xs font-mono">
+                <div class="flex justify-between items-center text-slate-300">
+                  <span>1x Synthetic Engine Oil 5W30 (4L)</span>
+                  <span class="text-white font-bold">₹2,400</span>
+                </div>
+                <div class="flex justify-between items-center text-slate-300">
+                  <span>1x OEM Engine Oil Filter</span>
+                  <span class="text-white font-bold">₹350</span>
+                </div>
+                <div class="flex justify-between items-center text-slate-300">
+                  <span>Standard Periodic Inspection Labour</span>
+                  <span class="text-white font-bold">₹800</span>
+                </div>
+                <div class="border-t border-slate-700 pt-2 flex justify-between items-center text-emerald-400 font-bold">
+                  <span>Total Calculated Invoice</span>
+                  <span>₹3,550</span>
+                </div>
+              </div>
+            </div>
+
+            <div>
+              <label class="text-xs text-slate-400">Mechanic Work Notes</label>
+              <textarea id="bill-notes" rows="2" class="w-full mt-1 bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white">Engine oil completely flushed and renewed. OEM filter seated properly. All 40 inspection points checked.</textarea>
+            </div>
+          </div>
+
+          <div class="flex justify-end gap-3 pt-3 border-t border-slate-700">
+            <button onclick="closeBillingModal()" class="px-4 py-2 rounded-xl bg-slate-700 hover:bg-slate-600 text-xs font-bold text-white">
+              Cancel
+            </button>
+            <button onclick="submitCompletionBill()" class="px-5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-xs font-bold text-white shadow-lg shadow-emerald-600/30">
+              Complete Job, Sync Odometer & Generate PDF Bill →
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 4: ML PREDICTIVE MAINTENANCE (FR-35 - FR-40) -->
+    <section id="tab-ml" class="hidden space-y-6">
+      <div class="bg-slate-800/80 border border-slate-700 rounded-2xl p-5 space-y-5">
+        <div class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-700 pb-3">
+          <div>
+            <h3 class="text-base font-bold text-white">Machine Learning Maintenance Prediction</h3>
+            <p class="text-xs text-slate-400">Trained scikit-learn RandomForestRegressor predicting service intervals and estimated cost (INR).</p>
+          </div>
+          <span class="text-xs font-mono px-3 py-1 bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 rounded-xl">
+            Model: MultiOutputRegressor(RF)
+          </span>
+        </div>
+
+        <!-- Prediction Output Cards -->
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div class="bg-slate-900/90 border border-slate-700 p-4 rounded-xl space-y-2">
+            <span class="text-[10px] text-slate-400 uppercase font-bold tracking-wider">Next Oil Change</span>
+            <div class="text-2xl font-black text-amber-400 font-mono">1,500 km</div>
+            <p class="text-xs text-slate-400">Predicted remaining distance before oil viscosity degradation.</p>
+          </div>
+
+          <div class="bg-slate-900/90 border border-slate-700 p-4 rounded-xl space-y-2">
+            <span class="text-[10px] text-slate-400 uppercase font-bold tracking-wider">Next Brake Inspection</span>
+            <div class="text-2xl font-black text-emerald-400 font-mono">6,500 km</div>
+            <p class="text-xs text-slate-400">Predicted distance before brake pad thickness reaches minimum safety limit.</p>
+          </div>
+
+          <div class="bg-slate-900/90 border border-slate-700 p-4 rounded-xl space-y-2">
+            <span class="text-[10px] text-slate-400 uppercase font-bold tracking-wider">Estimated Service Cost</span>
+            <div class="text-2xl font-black text-blue-400 font-mono">₹4,500</div>
+            <p class="text-xs text-slate-400">Estimated cost for upcoming routine service visit (Parts + Labour).</p>
+          </div>
+        </div>
+
+        <!-- Input Features Fed into ML Microservice -->
+        <div class="bg-slate-900 p-4 rounded-xl border border-slate-700/60 space-y-3">
+          <h4 class="text-xs font-bold text-white uppercase tracking-wider">Feature Pipeline (FR-36 Compliant)</h4>
+          <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3 text-xs font-mono">
+            <div>
+              <span class="text-[10px] text-slate-400">Vehicle Age</span>
+              <div class="text-white font-bold">4.0 Years</div>
+            </div>
+            <div>
+              <span class="text-[10px] text-slate-400">Current Odometer</span>
+              <div class="text-white font-bold">18,500 km</div>
+            </div>
+            <div>
+              <span class="text-[10px] text-slate-400">Avg Monthly Usage</span>
+              <div class="text-white font-bold">1,000 km/mo</div>
+            </div>
+            <div>
+              <span class="text-[10px] text-slate-400">Last Service Interval</span>
+              <div class="text-white font-bold">8,500 km</div>
+            </div>
+            <div>
+              <span class="text-[10px] text-slate-400">Past Repairs</span>
+              <div class="text-white font-bold">2 Visits</div>
+            </div>
+            <div>
+              <span class="text-[10px] text-slate-400">Fuel Type</span>
+              <div class="text-white font-bold">PETROL</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="p-3 rounded-xl bg-slate-900/50 border border-slate-700 flex items-center justify-between text-xs">
+          <span class="text-slate-400">Resilience guarantee (FR-39): Graceful fallback to rule-based estimation if ML service is unreachable.</span>
+          <span class="text-emerald-400 font-bold">✓ Active & Calibrated</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 5: INVOICES & SERVICE HISTORY -->
+    <section id="tab-invoices" class="hidden space-y-6">
+      <div class="bg-slate-800/80 border border-slate-700 rounded-2xl p-5 space-y-4">
+        <div class="flex items-center justify-between">
+          <div>
+            <h3 class="text-sm font-bold text-white uppercase tracking-wider">Service History & Digital Invoices</h3>
+            <p class="text-xs text-slate-400">All completed workshop visits and generated PDF tax invoices.</p>
+          </div>
+          <span class="text-xs font-mono px-2 py-1 rounded bg-slate-900 text-slate-400">FR-26, FR-27 Compliant</span>
+        </div>
+
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-xs text-slate-300">
+            <thead class="bg-slate-900 text-slate-400 font-bold uppercase text-[10px] border-b border-slate-700">
+              <tr>
+                <th class="py-2.5 px-3">Invoice No</th>
+                <th class="py-2.5 px-3">Vehicle</th>
+                <th class="py-2.5 px-3">Service Date</th>
+                <th class="py-2.5 px-3">Odometer</th>
+                <th class="py-2.5 px-3">Amount</th>
+                <th class="py-2.5 px-3">Status</th>
+                <th class="py-2.5 px-3 text-right">Invoice Action</th>
+              </tr>
+            </thead>
+            <tbody id="invoice-rows" class="divide-y divide-slate-700/60 font-mono">
+              <!-- Dynamically populated -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+  </div>
+
+  <script>
+    // GLOBAL STATE
+    const state = {
+      role: 'CUSTOMER',
+      activeTab: 'garage',
+      selectedVehicleId: 1,
+      vehicles: [
+        {
+          id: 1,
+          name: 'Hyundai Creta SX (2022)',
+          reg: 'RJ14-AB-1234',
+          fuel: 'PETROL',
+          current_km: 18500,
+          puc_expiry: '2026-12-07',
+          insurance_expiry: '2027-01-16',
+          components: [
+            { name: 'Engine Oil', interval_km: 10000, interval_months: 6, last_km: 10000, last_date: '2026-07-17' },
+            { name: 'Brakes', interval_km: 15000, interval_months: 12, last_km: 10000, last_date: '2026-07-17' },
+            { name: 'Tyres', interval_km: 40000, interval_months: 36, last_km: 0, last_date: '2025-05-17' },
+            { name: 'Battery', interval_km: 50000, interval_months: 24, last_km: 0, last_date: '2025-05-17' },
+            { name: 'Air Filter', interval_km: 15000, interval_months: 12, last_km: 10000, last_date: '2026-07-17' },
+            { name: 'Coolant', interval_km: 30000, interval_months: 24, last_km: 0, last_date: '2025-05-17' },
+            { name: 'Air Conditioner', interval_km: 20000, interval_months: 12, last_km: 0, last_date: '2025-05-17' },
+            { name: 'General Service', interval_km: 10000, interval_months: 12, last_km: 10000, last_date: '2026-07-17' }
+          ]
+        },
+        {
+          id: 2,
+          name: 'Tata Nexon EV (2024)',
+          reg: 'MH12-CD-5678',
+          fuel: 'ELECTRIC',
+          current_km: 8200,
+          puc_expiry: '2027-02-15',
+          insurance_expiry: '2027-05-15',
+          components: [
+            { name: 'Engine Oil', interval_km: 10000, interval_months: 6, last_km: 0, last_date: '2026-05-17' },
+            { name: 'Brakes', interval_km: 15000, interval_months: 12, last_km: 0, last_date: '2026-05-17' },
+            { name: 'Tyres', interval_km: 40000, interval_months: 36, last_km: 0, last_date: '2026-05-17' },
+            { name: 'Battery', interval_km: 50000, interval_months: 24, last_km: 0, last_date: '2026-05-17' },
+            { name: 'Air Filter', interval_km: 15000, interval_months: 12, last_km: 0, last_date: '2026-05-17' },
+            { name: 'Coolant', interval_km: 30000, interval_months: 24, last_km: 0, last_date: '2026-05-17' },
+            { name: 'Air Conditioner', interval_km: 20000, interval_months: 12, last_km: 0, last_date: '2026-05-17' },
+            { name: 'General Service', interval_km: 10000, interval_months: 12, last_km: 0, last_date: '2026-05-17' }
+          ]
+        }
+      ],
+      notifications: [
+        { id: 1, type: 'MAINTENANCE_DUE', msg: 'Urgent: Air Conditioner service is OVERDUE for RJ14-AB-1234 (Time limit reached).', unread: true },
+        { id: 2, type: 'MAINTENANCE_SOON', msg: 'Notice: Engine Oil service is DUE SOON for RJ14-AB-1234 (1,500 km remaining).', unread: true },
+        { id: 3, type: 'EXPIRY', msg: 'Reminder: PUC Certificate for RJ14-AB-1234 expires in 20 days.', unread: true }
+      ],
+      bookings: [
+        { id: 'VC-BK-101', vehicle: 'Hyundai Creta (RJ14-AB-1234)', customer: 'Mohit Sharma', date: '2026-11-20', slot: '09:00-11:00', services: 'Engine Oil, Brakes', status: 'IN_PROGRESS' },
+        { id: 'VC-BK-102', vehicle: 'Tata Nexon EV (MH12-CD-5678)', customer: 'Aarav Patel', date: '2026-11-21', slot: '11:00-13:00', services: 'General Service', status: 'PENDING' },
+        { id: 'VC-BK-100', vehicle: 'Hyundai Creta (RJ14-AB-1234)', customer: 'Mohit Sharma', date: '2026-10-15', slot: '14:00-16:00', services: 'Periodic Service', status: 'COMPLETED' }
+      ],
+      invoices: [
+        { billNo: 'VC-2026-0001', vehicle: 'Hyundai Creta', reg: 'RJ14-AB-1234', date: '2026-10-15', odo: 10000, amount: 3150, status: 'PAID' }
+      ],
+      catalog: [
+        { id: 'oil', name: 'Engine Oil & Filter', price: 2800, icon: '🛢️', desc: 'Synthetic 5W30 + OEM filter' },
+        { id: 'brake', name: 'Brake Inspection', price: 2200, icon: '🛑', desc: 'Pads, calipers & disc check' },
+        { id: 'ac', name: 'AC Servicing', price: 1800, icon: '🧊', desc: 'Gas recharge & condenser wash' },
+        { id: 'general', name: '40-Point General Service', price: 3500, icon: '🛠️', desc: 'Full bumper-to-bumper inspection' },
+        { id: 'tyre', name: 'Tyre Rotation & Alignment', price: 1200, icon: '🛞', desc: 'Alignment & tread measurement' },
+        { id: 'battery', name: 'Battery Health Check', price: 650, icon: '🔋', desc: 'Voltage & terminal cleaning' },
+        { id: 'coolant', name: 'Coolant Radiator Flush', price: 1400, icon: '❄️', desc: 'Flush & anti-freeze refill' },
+        { id: 'filter', name: 'Air & Cabin Filters', price: 850, icon: '💨', desc: 'Intake and cabin renewal' }
+      ],
+      selectedCatalogIds: ['oil']
+    };
+
+    // Calculate Maintenance Status per SRS FR-12 to FR-15
+    function calcStatus(comp, currentKm) {
+      const nextDueKm = comp.last_km + comp.interval_km;
+      const remainingKm = nextDueKm - currentKm;
+      const dueSoonKm = 0.15 * comp.interval_km;
+
+      // Time calculation
+      const lastDate = new Date(comp.last_date);
+      const nextDueDate = new Date(lastDate);
+      nextDueDate.setMonth(nextDueDate.getMonth() + comp.interval_months);
+      const today = new Date('2026-11-17');
+      const remainingDays = Math.ceil((nextDueDate - today) / (1000 * 60 * 60 * 24));
+      const dueSoonDays = Math.min(30, Math.ceil(0.15 * comp.interval_months * 30));
+
+      let status = 'OK';
+      if (remainingKm <= 0 || remainingDays <= 0) {
+        status = 'DUE';
+      } else if (remainingKm <= dueSoonKm || remainingDays <= dueSoonDays) {
+        status = 'DUE_SOON';
+      }
+
+      return { nextDueKm, remainingKm, remainingDays, status };
+    }
+
+    // RENDER FUNCTIONS
+    function renderGarage() {
+      const v = state.vehicles.find(item => item.id === state.selectedVehicleId) || state.vehicles[0];
+      document.getElementById('veh-title').innerText = v.name;
+      document.getElementById('veh-reg').innerText = `Reg No: ${v.reg} • Fuel: ${v.fuel}`;
+      document.getElementById('veh-odometer').innerText = `${v.current_km.toLocaleString()} km`;
+
+      const tbody = document.getElementById('component-rows');
+      tbody.innerHTML = '';
+
+      let dueCount = 0;
+      let soonCount = 0;
+
+      v.components.forEach(c => {
+        const res = calcStatus(c, v.current_km);
+        if (res.status === 'DUE') dueCount++;
+        if (res.status === 'DUE_SOON') soonCount++;
+
+        let badgeClass = 'badge-ok';
+        let badgeText = 'Up to Date';
+        if (res.status === 'DUE') {
+          badgeClass = 'badge-due';
+          badgeText = 'Due Now';
+        } else if (res.status === 'DUE_SOON') {
+          badgeClass = 'badge-soon';
+          badgeText = 'Due Soon';
+        }
+
+        const tr = document.createElement('tr');
+        tr.className = 'hover:bg-slate-800/50 transition';
+        tr.innerHTML = `
+          <td class="py-2.5 px-3 font-sans font-bold text-white">${c.name}</td>
+          <td class="py-2.5 px-3 text-slate-400">${c.interval_km.toLocaleString()} km / ${c.interval_months} mo</td>
+          <td class="py-2.5 px-3 text-slate-400">${c.last_km.toLocaleString()} km</td>
+          <td class="py-2.5 px-3 text-slate-300 font-bold">${res.nextDueKm.toLocaleString()} km</td>
+          <td class="py-2.5 px-3 ${res.remainingKm <= 1500 ? 'text-amber-400' : 'text-slate-300'}">${res.remainingKm.toLocaleString()} km</td>
+          <td class="py-2.5 px-3"><span class="${badgeClass} px-2 py-0.5 rounded-full text-[10px] font-bold">${badgeText}</span></td>
+          <td class="py-2.5 px-3 text-right">
+            <button onclick="bookSpecificService('${c.name}')" class="px-2 py-1 rounded bg-blue-600/20 hover:bg-blue-600 text-blue-400 hover:text-white transition text-[10px] font-bold">Book</button>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+
+      const overall = document.getElementById('veh-overall-status');
+      if (dueCount > 0) {
+        overall.className = 'text-sm font-bold text-red-400 mt-1';
+        overall.innerText = `${dueCount} Overdue Component${dueCount > 1 ? 's' : ''}`;
+      } else if (soonCount > 0) {
+        overall.className = 'text-sm font-bold text-amber-400 mt-1';
+        overall.innerText = `${soonCount} Due Soon`;
+      } else {
+        overall.className = 'text-sm font-bold text-emerald-400 mt-1';
+        overall.innerText = 'All Up to Date';
+      }
+    }
+
+    function renderNotifications() {
+      const list = document.getElementById('notif-list');
+      list.innerHTML = '';
+      const unreadCount = state.notifications.filter(n => n.unread).length;
+      document.getElementById('notif-badge').innerText = unreadCount;
+
+      state.notifications.forEach(n => {
+        const item = document.createElement('div');
+        item.className = `p-3 hover:bg-slate-700/40 transition cursor-pointer flex items-start gap-2.5 ${n.unread ? 'bg-blue-900/10' : ''}`;
+        item.onclick = () => { n.unread = false; renderNotifications(); };
+        item.innerHTML = `
+          <span class="text-sm shrink-0">${n.type === 'MAINTENANCE_DUE' ? '🛑' : n.type === 'MAINTENANCE_SOON' ? '⚠️' : '🔔'}</span>
+          <div class="flex-1">
+            <p class="text-slate-200 text-xs">${n.msg}</p>
+            <span class="text-[10px] text-slate-500">Just now</span>
+          </div>
+          ${n.unread ? '<span class="w-2 h-2 rounded-full bg-blue-500 mt-1.5 shrink-0"></span>' : ''}
+        `;
+        list.appendChild(item);
+      });
+    }
+
+    function renderCatalog() {
+      const container = document.getElementById('wizard-catalog');
+      container.innerHTML = '';
+      let sum = 0;
+
+      state.catalog.forEach(item => {
+        const isSelected = state.selectedCatalogIds.includes(item.id);
+        if (isSelected) sum += item.price;
+
+        const card = document.createElement('div');
+        card.onclick = () => toggleCatalogItem(item.id);
+        card.className = `p-3 rounded-xl border cursor-pointer transition ${isSelected ? 'border-blue-500 bg-blue-500/10' : 'border-slate-700 bg-slate-900/60 hover:border-slate-500'}`;
+        card.innerHTML = `
+          <div class="flex justify-between items-start">
+            <span class="text-xl">${item.icon}</span>
+            <input type="checkbox" ${isSelected ? 'checked' : ''} class="accent-blue-500" />
+          </div>
+          <div class="mt-2">
+            <div class="text-xs font-bold text-white">${item.name}</div>
+            <div class="text-[11px] text-slate-400 mt-0.5">${item.desc}</div>
+            <div class="text-xs font-bold text-emerald-400 mt-2 font-mono">₹${item.price.toLocaleString()}</div>
+          </div>
+        `;
+        container.appendChild(card);
+      });
+
+      document.getElementById('wizard-est-total').innerText = `₹${sum.toLocaleString()}`;
+    }
+
+    function renderAdminBookings() {
+      const tbody = document.getElementById('admin-booking-rows');
+      tbody.innerHTML = '';
+      document.getElementById('admin-booking-count').innerText = `${state.bookings.length} Total Bookings`;
+
+      state.bookings.forEach(b => {
+        let statusBadge = 'bg-blue-500/10 text-blue-400 border border-blue-500/20';
+        if (b.status === 'ACCEPTED') statusBadge = 'bg-purple-500/10 text-purple-400 border border-purple-500/20';
+        if (b.status === 'IN_PROGRESS') statusBadge = 'bg-amber-500/10 text-amber-400 border border-amber-500/20';
+        if (b.status === 'COMPLETED') statusBadge = 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20';
+
+        let actionBtn = '';
+        if (b.status === 'PENDING') {
+          actionBtn = `<button onclick="updateBookingStatus('${b.id}', 'ACCEPTED')" class="px-2 py-1 bg-purple-600 hover:bg-purple-500 text-white rounded text-[10px] font-bold">Accept</button>`;
+        } else if (b.status === 'ACCEPTED') {
+          actionBtn = `<button onclick="updateBookingStatus('${b.id}', 'IN_PROGRESS')" class="px-2 py-1 bg-amber-600 hover:bg-amber-500 text-white rounded text-[10px] font-bold">Start Job</button>`;
+        } else if (b.status === 'IN_PROGRESS') {
+          actionBtn = `<button onclick="openBillingModal('${b.id}')" class="px-2 py-1 bg-emerald-600 hover:bg-emerald-500 text-white rounded text-[10px] font-bold">Generate Bill</button>`;
+        } else {
+          actionBtn = `<span class="text-slate-500 text-[10px]">Completed</span>`;
+        }
+
+        const tr = document.createElement('tr');
+        tr.className = 'hover:bg-slate-800/50 transition';
+        tr.innerHTML = `
+          <td class="py-2.5 px-3 font-bold text-white">${b.id}</td>
+          <td class="py-2.5 px-3"><div class="text-white">${b.vehicle}</div><div class="text-[10px] text-slate-400">${b.customer}</div></td>
+          <td class="py-2.5 px-3"><div class="text-slate-300">${b.date}</div><div class="text-[10px] text-slate-500">${b.slot}</div></td>
+          <td class="py-2.5 px-3 text-slate-300">${b.services}</td>
+          <td class="py-2.5 px-3"><span class="${statusBadge} px-2 py-0.5 rounded-full text-[10px] font-bold">${b.status}</span></td>
+          <td class="py-2.5 px-3 text-right">${actionBtn}</td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function renderInvoices() {
+      const tbody = document.getElementById('invoice-rows');
+      tbody.innerHTML = '';
+      state.invoices.forEach(inv => {
+        const tr = document.createElement('tr');
+        tr.className = 'hover:bg-slate-800/50 transition';
+        tr.innerHTML = `
+          <td class="py-2.5 px-3 font-bold text-white">${inv.billNo}</td>
+          <td class="py-2.5 px-3"><div class="text-white">${inv.vehicle}</div><div class="text-[10px] text-slate-400">${inv.reg}</div></td>
+          <td class="py-2.5 px-3 text-slate-300">${inv.date}</td>
+          <td class="py-2.5 px-3 text-slate-300">${inv.odo.toLocaleString()} km</td>
+          <td class="py-2.5 px-3 text-emerald-400 font-bold">₹${inv.amount.toLocaleString()}</td>
+          <td class="py-2.5 px-3"><span class="badge-ok px-2 py-0.5 rounded-full text-[10px] font-bold">${inv.status}</span></td>
+          <td class="py-2.5 px-3 text-right">
+            <button onclick="alert('Viewing Tax Invoice ' + '${inv.billNo}' + ' for ₹' + '${inv.amount}' + '. Generated with PDFKit.')" class="px-2 py-1 rounded bg-blue-600/20 hover:bg-blue-600 text-blue-400 hover:text-white transition text-[10px] font-bold">PDF Invoice</button>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    // ACTIONS
+    function setRole(newRole) {
+      state.role = newRole;
+      if (newRole === 'CUSTOMER') {
+        document.getElementById('btn-role-customer').className = 'px-3 py-1.5 rounded-lg font-medium transition bg-blue-600 text-white shadow';
+        document.getElementById('btn-role-admin').className = 'px-3 py-1.5 rounded-lg font-medium transition text-slate-400 hover:text-white';
+        showTab('garage');
+      } else {
+        document.getElementById('btn-role-admin').className = 'px-3 py-1.5 rounded-lg font-medium transition bg-blue-600 text-white shadow';
+        document.getElementById('btn-role-customer').className = 'px-3 py-1.5 rounded-lg font-medium transition text-slate-400 hover:text-white';
+        showTab('admin');
+      }
+    }
+
+    function showTab(tabId) {
+      state.activeTab = tabId;
+      ['garage', 'booking', 'admin', 'ml', 'invoices'].forEach(t => {
+        document.getElementById(`tab-${t}`).classList.add('hidden');
+        document.getElementById(`tab-btn-${t}`).classList.remove('active');
+      });
+      document.getElementById(`tab-${tabId}`).classList.remove('hidden');
+      document.getElementById(`tab-btn-${tabId}`).classList.add('active');
+
+      if (tabId === 'garage') renderGarage();
+      if (tabId === 'booking') renderCatalog();
+      if (tabId === 'admin') renderAdminBookings();
+      if (tabId === 'invoices') renderInvoices();
+    }
+
+    function switchVehicle(vehId) {
+      state.selectedVehicleId = parseInt(vehId, 10);
+      renderGarage();
+    }
+
+    function promptUpdateOdometer() {
+      const v = state.vehicles.find(item => item.id === state.selectedVehicleId);
+      const newReading = prompt(`Enter new odometer reading for ${v.name} (must be $\\ge$ ${v.current_km} km):`, v.current_km + 500);
+      if (newReading && !isNaN(newReading)) {
+        const val = parseInt(newReading, 10);
+        if (val < v.current_km) {
+          alert('Error: Odometer reading cannot be lower than the previous recorded reading (FR-9).');
+          return;
+        }
+        v.current_km = val;
+        renderGarage();
+
+        // Prompt alert dispatch
+        state.notifications.unshift({
+          id: Date.now(),
+          type: 'MAINTENANCE_SOON',
+          msg: `Odometer updated to ${val.toLocaleString()} km for ${v.reg}. Threshold scan complete.`,
+          unread: true
+        });
+        renderNotifications();
+      }
+    }
+
+    function toggleNotifications() {
+      document.getElementById('notif-dropdown').classList.toggle('hidden');
+    }
+
+    function markAllNotificationsRead() {
+      state.notifications.forEach(n => n.unread = false);
+      renderNotifications();
+    }
+
+    function runDiagnosticScan() {
+      const spinner = document.getElementById('scan-spinner');
+      spinner.classList.remove('hidden');
+      setTimeout(() => {
+        spinner.classList.add('hidden');
+        state.notifications.unshift({
+          id: Date.now(),
+          type: 'MAINTENANCE_DUE',
+          msg: 'Diagnostic Scan: Air Conditioner service is OVERDUE for RJ14-AB-1234 (18 months elapsed).',
+          unread: true
+        });
+        renderNotifications();
+        alert('Diagnostic Scan Complete: 2 vehicles scanned. 1 overdue alert identified.');
+      }, 700);
+    }
+
+    function goToBookingWizard() {
+      showTab('booking');
+    }
+
+    function bookSpecificService(serviceName) {
+      showTab('booking');
+      nextWizardStep(2);
+    }
+
+    // WIZARD CONTROLS
+    function nextWizardStep(step) {
+      [1, 2, 3].forEach(s => document.getElementById(`wizard-step-${s}`).classList.add('hidden'));
+      document.getElementById(`wizard-step-${step}`).classList.remove('hidden');
+
+      if (step >= 2) {
+        document.getElementById('step-badge-2').className = 'w-8 h-8 rounded-full bg-blue-600 text-white font-bold flex items-center justify-center text-xs shadow-lg shadow-blue-500/30';
+        document.getElementById('step-label-2').className = 'text-xs font-bold text-white';
+        document.getElementById('step-line-1').className = 'h-0.5 flex-1 mx-4 bg-blue-600';
+      }
+      if (step === 3) {
+        document.getElementById('step-badge-3').className = 'w-8 h-8 rounded-full bg-blue-600 text-white font-bold flex items-center justify-center text-xs shadow-lg shadow-blue-500/30';
+        document.getElementById('step-label-3').className = 'text-xs font-bold text-white';
+        document.getElementById('step-line-2').className = 'h-0.5 flex-1 mx-4 bg-blue-600';
+      }
+      renderCatalog();
+    }
+
+    function prevWizardStep(step) {
+      [1, 2, 3].forEach(s => document.getElementById(`wizard-step-${s}`).classList.add('hidden'));
+      document.getElementById(`wizard-step-${step}`).classList.remove('hidden');
+    }
+
+    function selectWizardVehicle(id) {
+      state.selectedVehicleId = id;
+      document.getElementById('wiz-card-1').className = id === 1 ? 'p-4 rounded-xl border-2 border-blue-500 bg-slate-900/90 cursor-pointer transition' : 'p-4 rounded-xl border border-slate-700 bg-slate-900/60 cursor-pointer transition hover:border-slate-500';
+      document.getElementById('wiz-card-2').className = id === 2 ? 'p-4 rounded-xl border-2 border-blue-500 bg-slate-900/90 cursor-pointer transition' : 'p-4 rounded-xl border border-slate-700 bg-slate-900/60 cursor-pointer transition hover:border-slate-500';
+    }
+
+    function toggleCatalogItem(id) {
+      if (state.selectedCatalogIds.includes(id)) {
+        if (state.selectedCatalogIds.length > 1) {
+          state.selectedCatalogIds = state.selectedCatalogIds.filter(i => i !== id);
+        }
+      } else {
+        state.selectedCatalogIds.push(id);
+      }
+      renderCatalog();
+    }
+
+    function selectSlot(btn, slotText) {
+      document.querySelectorAll('.slot-btn').forEach(b => {
+        b.className = 'slot-btn p-2 rounded-lg border border-slate-700 bg-slate-900 text-xs text-left';
+      });
+      btn.className = 'slot-btn active p-2 rounded-lg border border-blue-500 bg-blue-500/10 text-xs text-left';
+    }
+
+    function confirmBooking() {
+      const v = state.vehicles.find(item => item.id === state.selectedVehicleId);
+      const newId = `VC-BK-${Math.floor(100 + Math.random() * 900)}`;
+
+      const servicesNames = state.selectedCatalogIds.map(id => {
+        const item = state.catalog.find(c => c.id === id);
+        return item ? item.name : id;
+      }).join(', ');
+
+      state.bookings.unshift({
+        id: newId,
+        vehicle: `${v.name.split(' ')[0]} (${v.reg})`,
+        customer: 'Mohit Sharma (Customer)',
+        date: document.getElementById('wizard-date').value,
+        slot: '09:00-11:00',
+        services: servicesNames,
+        status: 'PENDING'
+      });
+
+      // Prompt Notification
+      state.notifications.unshift({
+        id: Date.now(),
+        type: 'BOOKING',
+        msg: `Booking confirmed: ${newId} scheduled for ${v.reg}. Bay assigned.`,
+        unread: true
+      });
+      renderNotifications();
+
+      [1, 2, 3].forEach(s => document.getElementById(`wizard-step-${s}`).classList.add('hidden'));
+      document.getElementById('wizard-success').classList.remove('hidden');
+      document.getElementById('wiz-conf-text').innerText = `Appointment ${newId} confirmed for ${v.name} (${v.reg}).`;
+    }
+
+    function resetWizard() {
+      document.getElementById('wizard-success').classList.add('hidden');
+      nextWizardStep(1);
+      showTab('garage');
+    }
+
+    // ADMIN WORKFLOW
+    function updateBookingStatus(id, newStatus) {
+      const b = state.bookings.find(item => item.id === id);
+      if (b) {
+        b.status = newStatus;
+        renderAdminBookings();
+        state.notifications.unshift({
+          id: Date.now(),
+          type: 'STATUS_UPDATE',
+          msg: `Booking ${id} status updated to ${newStatus}.`,
+          unread: true
+        });
+        renderNotifications();
+      }
+    }
+
+    let activeBillingBookingId = null;
+    function openBillingModal(id) {
+      activeBillingBookingId = id;
+      const b = state.bookings.find(item => item.id === id);
+      document.getElementById('bill-modal-sub').innerText = `Booking #${b.id} • ${b.vehicle}`;
+      document.getElementById('billing-modal').classList.remove('hidden');
+    }
+
+    function closeBillingModal() {
+      document.getElementById('billing-modal').classList.add('hidden');
+    }
+
+    function submitCompletionBill() {
+      const b = state.bookings.find(item => item.id === activeBillingBookingId);
+      const newOdo = parseInt(document.getElementById('bill-odometer').value, 10);
+      const billNo = `VC-2026-000${state.invoices.length + 1}`;
+
+      // Update booking
+      b.status = 'COMPLETED';
+
+      // Update vehicle odometer and Engine Oil
+      const v = state.vehicles[0];
+      v.current_km = newOdo;
+      v.components.find(c => c.name === 'Engine Oil').last_km = newOdo;
+      v.components.find(c => c.name === 'Engine Oil').last_date = '2026-11-17';
+
+      // Push Invoice
+      state.invoices.unshift({
+        billNo,
+        vehicle: 'Hyundai Creta',
+        reg: 'RJ14-AB-1234',
+        date: '2026-11-17',
+        odo: newOdo,
+        amount: 3550,
+        status: 'PAID'
+      });
+
+      // Prompt Notification
+      state.notifications.unshift({
+        id: Date.now(),
+        type: 'INVOICE',
+        msg: `Service Completed! Invoice ${billNo} generated for Rs. 3,550. PDF receipt ready.`,
+        unread: true
+      });
+
+      closeBillingModal();
+      renderAdminBookings();
+      renderNotifications();
+      renderGarage();
+      alert(`Bill Finalized: Invoice ${billNo} generated for ₹3,550. Vehicle odometer synced to ${newOdo} km.`);
+    }
+
+    // INIT
+    renderGarage();
+    renderNotifications();
+    renderCatalog();
+  </script>
+</body>
+</html>

@@ -1,7 +1,19 @@
-const dotenv = require('dotenv');
 const path = require('path');
+const fs = require('fs');
 
-dotenv.config({ path: path.resolve(__dirname, '../../.env') });
+const envPath = path.resolve(__dirname, '../../.env');
+try {
+  const dotenv = require('dotenv');
+  dotenv.config({ path: envPath });
+} catch {
+  if (typeof process.loadEnvFile === 'function' && fs.existsSync(envPath)) {
+    try {
+      process.loadEnvFile(envPath);
+    } catch {
+      // ignore
+    }
+  }
+}
 
 const env = {
   port: process.env.PORT || 5000,
