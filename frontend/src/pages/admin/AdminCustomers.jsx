@@ -41,8 +41,7 @@ export default function AdminCustomers() {
   return (
     <div className="p-4 sm:p-8 max-w-6xl mx-auto space-y-6">
       <div>
-        <p className="text-xs font-bold text-blue-600 uppercase tracking-wider">Account Governance</p>
-        <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900">Customer Management</h1>
+        <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900">Customers</h1>
         <p className="text-sm text-slate-500 mt-1">
           Review customer registrations, manage access permissions, and maintain account status.
         </p>

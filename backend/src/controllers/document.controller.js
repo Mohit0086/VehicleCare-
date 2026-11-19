@@ -4,7 +4,6 @@
  */
 
 const fs = require('fs');
-const path = require('path');
 const pool = require('../config/db');
 const AppError = require('../utils/AppError');
 const { ROLES } = require('../utils/constants');
@@ -49,27 +48,30 @@ const uploadDocument = async (req, res, next) => {
     return next(new AppError('No file uploaded. Please attach a PDF, JPG, or PNG document.', 400));
   }
 
-  const validTypes = ['RC', 'INSURANCE', 'PUC', 'OTHER'];
-  const normalizedType = (doc_type || 'OTHER').toUpperCase();
-
-  if (!validTypes.includes(normalizedType)) {
-    return next(new AppError('Invalid document type. Must be RC, INSURANCE, PUC, or OTHER.', 400));
-  }
-
-  const connection = await pool.getConnection();
-
+  let connection;
+  let committed = false;
   try {
-    await connection.beginTransaction();
-
-    const [vehicles] = await connection.execute('SELECT user_id FROM vehicles WHERE id = ?', [vehicleId]);
-    if (vehicles.length === 0) {
-      await connection.rollback();
-      return next(new AppError('Vehicle not found.', 404));
+    const normalizedType = typeof doc_type === 'string' ? doc_type.toUpperCase() : doc_type ?? 'OTHER';
+    if (!['RC', 'INSURANCE', 'PUC', 'OTHER'].includes(normalizedType)) {
+      throw new AppError('Choose a valid document type.', 400);
+    }
+    if (expiry_date) {
+      if (typeof expiry_date !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(expiry_date)) {
+        throw new AppError('Enter a valid expiry date.', 400);
+      }
+      const date = new Date(`${expiry_date}T00:00:00Z`);
+      if (Number.isNaN(date.getTime()) || date.toISOString().slice(0, 10) !== expiry_date) {
+        throw new AppError('Enter a valid expiry date.', 400);
+      }
     }
 
-    if (req.user.role === ROLES.OWNER && vehicles[0].user_id !== req.user.id) {
-      await connection.rollback();
-      return next(new AppError('Unauthorized.', 403));
+    connection = await pool.getConnection();
+    await connection.beginTransaction();
+
+    const [[vehicle]] = await connection.execute('SELECT user_id FROM vehicles WHERE id = ?', [vehicleId]);
+    if (!vehicle) throw new AppError('Vehicle not found.', 404);
+    if (req.user.role === ROLES.OWNER && vehicle.user_id !== req.user.id) {
+      throw new AppError('Unauthorized.', 403);
     }
 
     // Insert document record
@@ -97,6 +99,7 @@ const uploadDocument = async (req, res, next) => {
     }
 
     await connection.commit();
+    committed = true;
 
     res.status(201).json({
       message: 'Document uploaded successfully.',
@@ -110,10 +113,15 @@ const uploadDocument = async (req, res, next) => {
       },
     });
   } catch (err) {
-    await connection.rollback();
+    if (connection && !committed) await connection.rollback();
     next(err);
   } finally {
-    connection.release();
+    connection?.release();
+    if (!committed) {
+      await fs.promises.unlink(req.file.path).catch((err) => {
+        if (err.code !== 'ENOENT') console.warn('[Document Upload] Could not remove rejected upload.');
+      });
+    }
   }
 };
 
@@ -142,8 +150,9 @@ const downloadDocument = async (req, res, next) => {
     }
 
     res.setHeader('Content-Type', doc.mime_type);
-    res.setHeader('Content-Disposition', `attachment; filename="${doc.original_filename}"`);
-    fs.createReadStream(doc.file_path).pipe(res);
+    res.download(doc.file_path, doc.original_filename, (err) => {
+      if (err && !res.headersSent) next(err);
+    });
   } catch (err) {
     next(err);
   }

@@ -21,7 +21,7 @@ function getRuleBasedFallbackPrediction(features) {
   if (features.repair_count > 3) baseCost += 1000;
 
   return {
-    oil_change_km: Math.round(oilChangeRemaining),
+    oil_change_km: features.fuel_type === 'ELECTRIC' ? 0 : Math.round(oilChangeRemaining),
     brake_inspection_km: Math.round(brakeInspectionRemaining),
     estimated_cost: Math.round(baseCost),
     fallback: true,
@@ -57,7 +57,7 @@ async function predictMaintenance(features) {
       oil_change_km: Math.round(data.oil_change_km),
       brake_inspection_km: Math.round(data.brake_inspection_km),
       estimated_cost: Math.round(data.estimated_cost),
-      fallback: false,
+      fallback: data.model_version === 'heuristic-fallback',
     };
   } catch (err) {
     console.warn(`[ML Client] Prediction microservice request failed (${err.message}). Activating rule-based fallback.`);

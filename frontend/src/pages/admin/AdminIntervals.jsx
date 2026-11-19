@@ -56,8 +56,7 @@ export default function AdminIntervals() {
   return (
     <div className="p-4 sm:p-8 max-w-6xl mx-auto space-y-6">
       <div>
-        <p className="text-xs font-bold text-blue-600 uppercase tracking-wider">Maintenance Engine Configuration</p>
-        <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900">Service Intervals (FR-16)</h1>
+        <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900">Service intervals</h1>
         <p className="text-sm text-slate-500 mt-1">
           Configure default mileage thresholds and time cycles for the 8 core vehicle components.
         </p>

@@ -1,38 +1,34 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Activity, Car, RefreshCw, ArrowRight, Sparkles, AlertCircle } from 'lucide-react';
+import { Activity, Car, RefreshCw, ArrowRight } from 'lucide-react';
 import { vehicleApi } from '../../api/vehicle.api';
+import EstimateSummary from '../../components/EstimateSummary';
 import { predictionApi } from '../../api/prediction.api';
 
 export default function CustomerPredictions() {
   const [vehicles, setVehicles] = useState([]);
   const [predictions, setPredictions] = useState({});
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
 
   const loadPredictions = async () => {
     setLoading(true);
+    setError('');
     try {
-      let vList = [];
-
-        const res = await vehicleApi.list();
-        vList = res.vehicles || res.data || [];
-
-      setVehicles(vList);
-
-      const predMap = {};
-      for (const v of vList) {
-
-          try {
-            const p = await predictionApi.getPrediction(v.id);
-            predMap[v.id] = p.prediction || p;
-          } catch {
-            predMap[v.id] = null;
-          }
-
-      }
-      setPredictions(predMap);
-    } catch (err) {
-      console.warn('Prediction load error', err);
+      const res = await vehicleApi.list();
+      const list = res.vehicles || res.data || [];
+      const entries = await Promise.all(list.map(async (vehicle) => {
+        try {
+          const result = await predictionApi.getPrediction(vehicle.id);
+          return [vehicle.id, result.prediction || result];
+        } catch {
+          return [vehicle.id, null];
+        }
+      }));
+      setVehicles(list);
+      setPredictions(Object.fromEntries(entries));
+    } catch {
+      setError('Could not load your vehicles. Try refreshing.');
     } finally {
       setLoading(false);
     }
@@ -46,10 +42,9 @@ export default function CustomerPredictions() {
     <div className="p-4 sm:p-8 max-w-6xl mx-auto space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <p className="text-xs font-bold text-blue-600 uppercase tracking-wider">Predictive Machine Learning</p>
-          <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900">Vehicle Health Predictions</h1>
+          <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900">Maintenance estimates</h1>
           <p className="text-sm text-slate-500 mt-1">
-            Machine learning models forecasting oil life, brake pad wear, and expected repair bills.
+            Approximate service intervals and costs for your vehicles.
           </p>
         </div>
         <button
@@ -61,11 +56,13 @@ export default function CustomerPredictions() {
         </button>
       </div>
 
-      {vehicles.length === 0 ? (
+      {error && <p role="alert" className="text-sm text-red-800">{error}</p>}
+      {loading && <p role="status" className="text-sm text-slate-600">Loading estimates…</p>}
+      {!loading && !error && (vehicles.length === 0 ? (
         <div className="p-12 text-center bg-white rounded-3xl border border-slate-200">
           <Car size={40} className="mx-auto text-slate-300 mb-3" />
           <h3 className="font-bold text-slate-900 text-base">No vehicles found</h3>
-          <p className="text-xs text-slate-500 mt-1 mb-4">Add a vehicle to generate machine learning forecasts.</p>
+          <p className="text-xs text-slate-500 mt-1 mb-4">Add a vehicle to see maintenance estimates.</p>
           <Link to="/customer/vehicles" className="px-5 py-2.5 bg-blue-600 text-white font-semibold rounded-xl text-xs">
             Go to Garage
           </Link>
@@ -91,45 +88,21 @@ export default function CustomerPredictions() {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-3 gap-2.5 pt-2">
-                  <div className="p-3 bg-slate-50 rounded-2xl text-center">
-                    <span className="text-[10px] font-bold text-slate-500 uppercase block">Oil Change</span>
-                    <strong className="text-base text-blue-700 font-black mt-1 block">
-                      ~{p ? p.oil_change_km : '—'} km
-                    </strong>
-                  </div>
+                <EstimateSummary prediction={p} fuelType={v.fuel_type} />
 
-                  <div className="p-3 bg-slate-50 rounded-2xl text-center">
-                    <span className="text-[10px] font-bold text-slate-500 uppercase block">Brakes</span>
-                    <strong className="text-base text-indigo-700 font-black mt-1 block">
-                      ~{p ? p.brake_inspection_km : '—'} km
-                    </strong>
-                  </div>
-
-                  <div className="p-3 bg-slate-50 rounded-2xl text-center">
-                    <span className="text-[10px] font-bold text-slate-500 uppercase block">Est. Bill</span>
-                    <strong className="text-base text-emerald-700 font-black mt-1 block">
-                      ₹{p ? Number(p.estimated_cost).toLocaleString('en-IN') : '—'}
-                    </strong>
-                  </div>
-                </div>
-
-                <div className="flex items-center justify-between pt-2 border-t border-slate-100 text-xs">
-                  <span className="text-slate-400">
-                    {!p ? 'Estimate unavailable. Try refreshing.' : p.fallback ? 'Rule-based estimate' : 'Approximate model estimate'}
-                  </span>
+                <div className="flex justify-end border-t border-slate-100 pt-3 text-sm">
                   <Link
                     to={`/customer/book?vehicleId=${v.id}`}
                     className="font-bold text-blue-600 hover:text-blue-800 flex items-center gap-1"
                   >
-                    Schedule Service <ArrowRight size={14} />
+                    Book service <ArrowRight size={14} />
                   </Link>
                 </div>
               </div>
             );
           })}
         </div>
-      )}
+      ))}
     </div>
   );
 }

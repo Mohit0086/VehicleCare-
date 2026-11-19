@@ -1,38 +1,58 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowRight, ArrowUpRight, CalendarDays, Gauge, FolderCheck } from 'lucide-react';
+import { ArrowRight, CalendarDays, Gauge, FolderCheck } from 'lucide-react';
 
-export const carPhoto = 'https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?auto=format&fit=crop&w=1800&q=85';
-
-const services = [
-  { number: '01', icon: Gauge, title: 'Know what’s due.', text: 'Oil, brakes, tyres and the rest. Check maintenance against your mileage and last service date.', link: 'Track your vehicle' },
-  { number: '02', icon: CalendarDays, title: 'Make time for service.', text: 'Choose a workshop and an available slot. Follow your booking from request to completed job.', link: 'Plan your next visit' },
-  { number: '03', icon: FolderCheck, title: 'Keep the paperwork.', text: 'Find your service history, invoices, insurance and PUC expiry dates without searching through a folder.', link: 'Organize your records' },
+const features = [
+  { icon: Gauge, title: 'Maintenance reminders', text: 'See which services are due based on your odometer and service history.' },
+  { icon: CalendarDays, title: 'Workshop bookings', text: 'Choose a workshop and request an available slot. Check back for its response.' },
+  { icon: FolderCheck, title: 'Vehicle records', text: 'Keep service history, invoices, and insurance and PUC expiry dates together.' },
 ];
 
 export default function Home() {
   return (
-    <main className="motoring-home">
-      <section className="motoring-hero">
-        <div className="hero-copy">
-          <p className="motoring-kicker"><span /> YOUR CAR. THE FULL PICTURE.</p>
-          <h1>A little care.<br />A lot more<br /><em>road ahead.</em></h1>
-          <p className="hero-description">Keep track of the small things that keep your car going. Maintenance, workshop visits and service records, all in your own garage.</p>
-          <div className="hero-actions"><Link to="/register" className="motoring-button">Set up my garage <ArrowRight size={18} /></Link><Link to="/login" className="motoring-text-link">Already a member? Sign in <ArrowUpRight size={16} /></Link></div>
-          <div className="hero-footnote"><span>BUILT FOR EVERYDAY OWNERSHIP</span><p>From your daily commute to the long way home.</p></div>
-        </div>
-        <figure className="hero-photograph">
-          <img src={carPhoto} alt="Grey sports car parked on an open road, viewed from the front" fetchPriority="high" width="1800" height="1200" />
-          <figcaption><span>01 / THE OPEN ROAD</span><p>Look after the car.<br />Enjoy the drive.</p><span className="photo-rule" /></figcaption>
-        </figure>
-      </section>
-      <div className="motoring-index"><span>LESS TO REMEMBER. MORE MILES TO ENJOY.</span><a href="#car-care">Explore VehicleCare <ArrowRight size={16} /></a></div>
-      <section id="car-care" className="motoring-services">
-        <div className="services-heading"><p className="motoring-kicker">THE OWNERSHIP ESSENTIALS</p><h2>Good upkeep.<br />Without the guesswork.</h2><p>A practical place for everything that happens between one service and the next.</p></div>
-        <div className="services-list">{services.map(({ number, icon: Icon, title, text, link }) => <article key={number}><div className="service-topline"><span>{number}</span><Icon size={24} strokeWidth={1.4} /></div><h3>{title}</h3><p>{text}</p><Link to="/register">{link}<ArrowUpRight size={17} /></Link></article>)}</div>
-      </section>
-      <section className="motoring-closing"><div><p className="motoring-kicker">START WITH YOUR REGISTRATION NUMBER</p><h2>Your next chapter.<br />Better maintained.</h2></div><div><p>Add your vehicle and current mileage.<br />We’ll help you keep up with what comes next.</p><Link to="/register" className="motoring-button">Create an account <ArrowRight size={18} /></Link></div></section>
-      <footer className="motoring-footer"><Link to="/" className="brand">Vehicle<span className="brand-accent">Care</span></Link><p>Vehicle maintenance & service management</p><span>SISTec, Bhopal · {new Date().getFullYear()}</span></footer>
+    <main className="bg-[#faf9f5] text-slate-900">
+      <div className="mx-auto max-w-7xl px-5 sm:px-8 lg:px-12">
+        <section className="grid items-center gap-8 py-8 sm:py-12 lg:grid-cols-2 lg:gap-12 lg:py-16">
+          <div>
+            <h1 className="max-w-lg text-4xl font-semibold leading-tight tracking-tight sm:text-5xl xl:text-6xl">
+              Track maintenance. <span className="font-['Libre_Caslon_Display',Georgia,serif] font-normal text-primary">Book a service.</span>
+            </h1>
+            <p className="mt-5 max-w-md text-base leading-relaxed text-slate-600">
+              Add your vehicles, see what’s due, and keep your workshop bookings and invoices in one place.
+            </p>
+            <div className="mt-7 flex flex-wrap items-center gap-x-5 gap-y-3">
+              <Link to="/register" className="button button-primary min-h-11 gap-3 px-5 text-sm">
+                Create a customer account <ArrowRight size={16} aria-hidden="true" />
+              </Link>
+              <Link to="/register-garage" className="inline-flex min-h-11 items-center text-sm font-semibold text-primary hover:underline">
+                Register a garage
+              </Link>
+            </div>
+          </div>
+          <img
+            src="/images/workshop-car.webp"
+            alt=""
+            width="1200"
+            height="900"
+            fetchPriority="high"
+            className="aspect-[4/3] w-full rounded-lg bg-[#252e29] object-cover"
+          />
+        </section>
+
+        <section aria-label="Features" className="grid gap-y-6 border-t border-[#dcdcd2] py-8 sm:py-10 md:grid-cols-3 md:gap-8">
+          {features.map(({ icon: Icon, title, text }) => (
+            <article key={title} className="border-b border-[#dcdcd2] pb-6 last:border-b-0 last:pb-0 md:border-b-0 md:pb-0">
+              <Icon size={21} strokeWidth={1.7} className="text-primary" aria-hidden="true" />
+              <h2 className="mt-3 text-lg font-semibold">{title}</h2>
+              <p className="mt-1 max-w-sm text-sm leading-relaxed text-slate-600">{text}</p>
+            </article>
+          ))}
+        </section>
+
+        <footer className="border-t border-[#dcdcd2] py-6 text-sm text-slate-600">
+          VehicleCare
+        </footer>
+      </div>
     </main>
   );
 }

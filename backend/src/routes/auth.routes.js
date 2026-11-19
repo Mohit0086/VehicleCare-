@@ -8,6 +8,8 @@ const requireRole = require('../middleware/role');
 // Public routes
 router.post('/register', authController.register);
 router.post('/register-garage', authController.registerGarage);
+router.post('/verify-email', authController.verifyEmail);
+router.post('/resend-verification', authController.resendVerification);
 router.post('/login', authController.login);
 router.post('/forgot-password', authController.forgotPassword);
 router.post('/reset-password', authController.resetPassword);

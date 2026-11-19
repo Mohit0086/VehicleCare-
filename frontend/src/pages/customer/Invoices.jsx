@@ -48,8 +48,7 @@ export default function CustomerInvoices() {
   return (
     <div className="p-4 sm:p-8 max-w-6xl mx-auto space-y-6">
       <div>
-        <p className="text-xs font-bold text-blue-600 uppercase tracking-wider">Billing & Tax Invoices</p>
-        <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900">Service Invoices</h1>
+        <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900">Invoices</h1>
         <p className="text-sm text-slate-500 mt-1">
           Download PDF invoices for completed periodic maintenance and workshop jobs.
         </p>
@@ -95,16 +94,16 @@ export default function CustomerInvoices() {
                   <tr key={b.id} className="hover:bg-slate-50/60 transition">
                     <td className="p-4 font-bold text-slate-900">{b.bill_no}</td>
                     <td className="p-4 text-slate-500">
-                      {new Date(b.generated_at || Date.now()).toLocaleDateString('en-IN')}
+                      {b.generated_at ? new Date(b.generated_at).toLocaleDateString('en-IN') : 'Unavailable'}
                     </td>
                     <td className="p-4 font-semibold text-slate-800">{b.reg_no}</td>
-                    <td className="p-4 text-slate-600">{b.center_name || 'VehicleCare Central Workshop'}</td>
+                    <td className="p-4 text-slate-600">{b.center_name || 'Workshop unavailable'}</td>
                     <td className="p-4 font-extrabold text-slate-900">
                       ₹{Number(b.total_amount).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
                     </td>
                     <td className="p-4">
-                      <span className="bg-emerald-100 text-emerald-800 font-bold text-xs px-2.5 py-0.5 rounded-full">
-                        {b.payment_status || 'PAID'}
+                      <span className={`rounded-full px-2.5 py-0.5 text-xs font-bold ${b.payment_status === 'PAID' ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-100 text-slate-700'}`}>
+                        {b.payment_status === 'PAID' ? 'Paid' : b.payment_status === 'PENDING' ? 'Payment pending' : 'Status unavailable'}
                       </span>
                     </td>
                     <td className="p-4 text-right">

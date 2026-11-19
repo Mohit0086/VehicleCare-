@@ -44,9 +44,9 @@ export default function AdminCenters() {
   return (
     <div className="p-4 sm:p-8 max-w-6xl mx-auto space-y-6">
       <div>
-        <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900">Service Centers</h1>
+        <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900">Workshops</h1>
         <p className="text-sm text-slate-500 mt-1">
-          Registered service workshop facilities, slot capacities, and operational locations.
+          Review garage registrations and manage workshop approval.
         </p>
       </div>
 
@@ -80,7 +80,7 @@ export default function AdminCenters() {
             </div>
 
             <div className="p-3 bg-slate-50 rounded-2xl flex items-center justify-between text-xs font-medium">
-              <span className="text-slate-500">Bay Capacity per Slot:</span>
+              <span className="text-slate-500">Vehicles per slot</span>
               <strong className="text-slate-900">{c.slot_capacity || 4} vehicles</strong>
             </div>
             <p className="text-sm text-slate-600">{c.mechanic_name} · {c.mechanic_email}</p>

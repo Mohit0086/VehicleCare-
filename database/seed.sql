@@ -25,9 +25,9 @@ ON DUPLICATE KEY UPDATE
 -- 2. SEED USERS (Two Roles: ADMIN and CUSTOMER; Password: Admin@123 / Customer@123)
 INSERT INTO users (id, name, email, password_hash, role, phone, is_active)
 VALUES
-    (1, 'System Administrator', 'admin@vehiclecare.com', '$2b$10$K9Wn0E8j3F6qL8mB5zN3.e6Lz5B3R2T9vO7W4pA1C8vY3Z9j3m112', 'ADMIN', '9876543210', TRUE),
-    (2, 'Mohit Sharma (Customer)', 'customer@vehiclecare.com', '$2b$10$K9Wn0E8j3F6qL8mB5zN3.e6Lz5B3R2T9vO7W4pA1C8vY3Z9j3m112', 'CUSTOMER', '9876543211', TRUE),
-    (3, 'Aarav Patel (Customer 2)', 'owner@example.com', '$2b$10$K9Wn0E8j3F6qL8mB5zN3.e6Lz5B3R2T9vO7W4pA1C8vY3Z9j3m112', 'CUSTOMER', '9876543212', TRUE)
+    (1, 'System Administrator', 'admin@vehiclecare.com', '$2b$10$enkI7aKVUpaRk1sHZXR0GO6DnDGpPMWaDg60YaMe0y/9JA9zRlehi', 'ADMIN', '9876543210', TRUE),
+    (2, 'Mohit Sharma (Customer)', 'customer@vehiclecare.com', '$2b$10$ymfUeITV5l7HTDt44Vyoh.CFEVJdG7ms5tM5plhk7qTTdaHQ0q6ty', 'CUSTOMER', '9876543211', TRUE),
+    (3, 'Aarav Patel (Customer 2)', 'owner@example.com', '$2b$10$ymfUeITV5l7HTDt44Vyoh.CFEVJdG7ms5tM5plhk7qTTdaHQ0q6ty', 'CUSTOMER', '9876543212', TRUE)
 ON DUPLICATE KEY UPDATE 
     name = VALUES(name),
     role = VALUES(role),
@@ -96,8 +96,8 @@ ON DUPLICATE KEY UPDATE
 INSERT INTO bookings (id, vehicle_id, service_center_id, user_id, booking_date, time_slot, status, owner_notes, mechanic_notes, odometer_at_service)
 VALUES
     (1, 1, 1, 3, DATE_SUB(CURDATE(), INTERVAL 120 DAY), '10:00-12:00', 'COMPLETED', 'Regular 10k service and oil change', 'Service completed smoothly. Brake pads inspected, oil & filter changed.', 10000),
-    (2, 1, 1, 3, DATE_ADD(CURDATE(), INTERVAL 2 DAY), '14:00-16:00', 'ACCEPTED', 'Engine oil and air filter inspection', 'Job accepted by QuickFix.', NULL),
-    (3, 2, 2, 3, DATE_ADD(CURDATE(), INTERVAL 5 DAY), '09:00-11:00', 'PENDING', 'Tyre pressure check and routine alignment check', NULL, NULL)
+    (2, 1, 1, 3, DATE_ADD(CURDATE(), INTERVAL 2 DAY), '14:00-16:00', 'ACCEPTED', 'Engine oil and air filter inspection', 'Job accepted by the workshop.', NULL),
+    (3, 2, 1, 3, DATE_ADD(CURDATE(), INTERVAL 5 DAY), '09:00-11:00', 'PENDING', 'Tyre pressure check and routine alignment check', NULL, NULL)
 ON DUPLICATE KEY UPDATE status = VALUES(status);
 
 -- 8. SEED JOB ITEMS (FR-22) for Booking 1

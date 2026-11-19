@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { ArrowLeft, CircleAlert, KeyRound } from 'lucide-react';
 import { authApi } from '../../api/auth.api';
+import { passwordError, passwordHint } from './registrationValidation';
 import { LoadingButton } from '../../components/WorkspaceUI';
 
 export default function ResetPassword() {
@@ -17,7 +18,8 @@ export default function ResetPassword() {
     event.preventDefault();
     setError('');
     if (!token) return setError('This reset link is missing its token. Request a new link to continue.');
-    if (password.length < 8) return setError('Choose a password with at least 8 characters.');
+    const invalid = passwordError(password);
+    if (invalid) return setError(invalid);
     if (password !== confirmation) return setError('The passwords do not match.');
     setBusy(true);
     try {
@@ -39,7 +41,8 @@ export default function ResetPassword() {
       {!token && <div role="alert" className="form-alert"><CircleAlert size={16}/>This reset link is missing its token. Request a new link to continue.</div>}
       {error && <div role="alert" className="form-alert"><CircleAlert size={16}/>{error}</div>}
       <form className="space-y-4" onSubmit={submit}>
-        <label className="block text-sm font-semibold text-slate-700">New password<input className="mt-1 w-full px-3.5 py-2.5 bg-white border border-slate-300 rounded-lg text-sm" type="password" autoComplete="new-password" minLength={8} required value={password} onChange={e=>setPassword(e.target.value)}/></label>
+        <label className="block text-sm font-semibold text-slate-700">New password<input className="mt-1 w-full px-3.5 py-2.5 bg-white border border-slate-300 rounded-lg text-sm" type="password" autoComplete="new-password" minLength={8} maxLength={72} aria-describedby="reset-password-requirements" required value={password} onChange={e=>setPassword(e.target.value)}/></label>
+        <p id="reset-password-requirements" className="text-sm text-slate-600">{passwordHint}</p>
         <label className="block text-sm font-semibold text-slate-700">Confirm new password<input className="mt-1 w-full px-3.5 py-2.5 bg-white border border-slate-300 rounded-lg text-sm" type="password" autoComplete="new-password" minLength={8} required value={confirmation} onChange={e=>setConfirmation(e.target.value)}/></label>
         <LoadingButton loading={busy} disabled={!token}><KeyRound size={16}/>Reset password</LoadingButton>
       </form>

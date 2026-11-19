@@ -63,7 +63,7 @@ export default function AdminBookings({ garageName }) {
     try {
 
         await bookingApi.updateStatus(bookingId, { status: newStatus, mechanic_notes: reason });
-        setMsg(`Booking updated to ${newStatus}. Customer notified promptly.`);
+        setMsg(`Booking updated.`);
         await loadBookings();
 
     } catch (err) {
@@ -124,7 +124,7 @@ export default function AdminBookings({ garageName }) {
             item_type: 'PART',
           })),
         });
-        setMsg(`Job #${selectedBooking.id} completed! Tax bill generated & prompt notification sent to customer.`);
+        setMsg(`Job #${selectedBooking.id} completed. Invoice created.`);
         await loadBookings();
 
       setCompleteModalOpen(false);
@@ -139,9 +139,9 @@ export default function AdminBookings({ garageName }) {
     <div className="p-4 sm:p-8 max-w-6xl mx-auto space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900">{garageName ? `${garageName} bookings` : 'Workshop Booking Queue & Billing'}</h1>
+        <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900">{garageName ? `${garageName} bookings` : 'Workshop bookings'}</h1>
         <p className="text-sm text-slate-500 mt-1">
-          Review incoming customer requests, confirm appointments, record parts & labour, and generate official bills.
+          Review booking requests and create invoices for completed services.
         </p>
       </div>
 
@@ -326,7 +326,7 @@ export default function AdminBookings({ garageName }) {
                   className="w-full px-3.5 py-2.5 border border-slate-300 rounded-xl text-sm font-bold focus:ring-2 focus:ring-emerald-500 focus:outline-none"
                 />
                 <p className="text-[11px] text-slate-400 mt-0.5">
-                  Vehicle odometer will be updated to this reading automatically upon billing (FR-25).
+                  This updates the vehicle’s odometer when you complete the job.
                 </p>
               </div>
 

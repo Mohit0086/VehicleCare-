@@ -3,12 +3,13 @@ import { Link, useNavigate } from 'react-router-dom';
 import RegistrationOptions from './RegistrationOptions';
 import AuthLayout from './AuthLayout';
 import PasswordField from './PasswordField';
+import { passwordHint, phoneHint, registrationError } from './registrationValidation';
 import { authApi } from '../../api/auth.api';
 
 const fields = [
   { name: 'name', label: 'Your name', autoComplete: 'name', maxLength: 100 },
-  { name: 'email', label: 'Email', type: 'email', autoComplete: 'email', maxLength: 150 },
-  { name: 'phone', label: 'Workshop phone', type: 'tel', autoComplete: 'tel', minLength: 7, maxLength: 20 },
+  { name: 'email', label: 'Email', type: 'email', autoComplete: 'section-garage username', maxLength: 150 },
+  { name: 'phone', label: 'Workshop phone', type: 'tel', autoComplete: 'section-garage tel', maxLength: 32 },
   { name: 'garageName', label: 'Workshop name', autoComplete: 'organization', maxLength: 150 },
   { name: 'city', label: 'City', autoComplete: 'address-level2', maxLength: 100 },
   { name: 'address', label: 'Street address', autoComplete: 'street-address', maxLength: 1000 },
@@ -23,12 +24,9 @@ export default function RegisterGarage() {
   async function submit(event) {
     event.preventDefault();
     const details = Object.fromEntries(new FormData(event.currentTarget));
-    if (new TextEncoder().encode(details.password).length > 72) {
-      setError('Use a password no longer than 72 bytes.');
-      return;
-    }
-    if (details.password !== details.confirmPassword) {
-      setError('Passwords do not match.');
+    const invalid = registrationError(details);
+    if (invalid) {
+      setError(invalid);
       return;
     }
     delete details.confirmPassword;
@@ -36,7 +34,10 @@ export default function RegisterGarage() {
     setError('');
     try {
       const result = await authApi.registerGarage(details);
-      navigate('/login?account=garage', { replace: true, state: { message: result.message } });
+      navigate('/verify-email?account=garage', {
+        replace: true,
+        state: { email: details.email.trim(), emailSent: result.verificationEmailSent },
+      });
     } catch (err) {
       setError(err.response?.data?.error || 'Could not register the garage. Check your connection and try again.');
     } finally {
@@ -54,7 +55,8 @@ export default function RegisterGarage() {
           {fields.map(({ label, ...field }) => (
             <label key={field.name} className="grid gap-1.5 text-sm font-semibold text-slate-700">
               {label}
-              <input required className="auth-input" {...field} />
+              <input required className="auth-input" {...field} aria-describedby={field.name === 'phone' ? 'garage-phone-requirements' : undefined} />
+              {field.name === 'phone' && <span id="garage-phone-requirements" className="font-normal text-slate-600">{phoneHint}</span>}
             </label>
           ))}
         </div>
@@ -63,10 +65,10 @@ export default function RegisterGarage() {
           <textarea name="services" rows="3" maxLength={1000} className="auth-input" />
         </label>
         <div className="grid gap-4 sm:grid-cols-2">
-          <PasswordField id="garage-password" name="password" autoComplete="new-password" required minLength={6} maxLength={72} aria-describedby="garage-password-requirements" />
-          <PasswordField id="garage-confirm" name="confirmPassword" label="Confirm password" autoComplete="new-password" required />
+          <PasswordField id="garage-password" name="password" autoComplete="section-garage new-password" required minLength={8} maxLength={72} aria-describedby="garage-password-requirements" />
+          <PasswordField id="garage-confirm" name="confirmPassword" label="Confirm password" autoComplete="section-garage new-password" required />
         </div>
-        <p id="garage-password-requirements" className="text-sm text-slate-600">Use at least 6 characters.</p>
+        <p id="garage-password-requirements" className="text-sm text-slate-600">{passwordHint}</p>
         <button type="submit" disabled={saving} className="auth-submit">
           {saving ? 'Submitting…' : 'Submit for approval'}
         </button>

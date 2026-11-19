@@ -7,6 +7,13 @@ const pool = require('../config/db');
 const AppError = require('../utils/AppError');
 const { BOOKING_STATUS } = require('../utils/constants');
 
+const MAX_AMOUNT = 99999999.99;
+function parseDecimal(value, max) {
+  if (!['string', 'number'].includes(typeof value) || !/^\d+(?:\.\d{1,2})?$/.test(String(value).trim())) return NaN;
+  const number = Number(value);
+  return number <= max ? number : NaN;
+}
+
 /**
  * Completes a service booking atomically within a database transaction.
  */
@@ -21,6 +28,11 @@ async function completeJobAndGenerateBill({
   paymentMode = 'CASH',
   servicedTypeIds = [],
 }) {
+  if (!Array.isArray(jobItems) || !['CASH', 'UPI', 'CARD'].includes(paymentMode)) {
+    throw new AppError('Enter valid invoice items and payment method.', 400);
+  }
+  const labour = parseDecimal(labourCharge, MAX_AMOUNT);
+  if (!Number.isFinite(labour)) throw new AppError('Enter a non-negative labour charge with up to two decimal places.', 400);
   const connection = await pool.getConnection();
 
   try {
@@ -52,8 +64,8 @@ async function completeJobAndGenerateBill({
     }
 
     // 2. Validate odometer reading (mechanic reading cannot decrease vehicle km - FR-9, 4.3)
-    const serviceKm = parseInt(odometerAtService, 10);
-    if (isNaN(serviceKm) || serviceKm < booking.vehicle_current_km) {
+    const serviceKm = parseDecimal(odometerAtService, 4294967295);
+    if (!Number.isInteger(serviceKm) || serviceKm < booking.vehicle_current_km) {
       throw new AppError(
         `Odometer reading at service (${serviceKm} km) cannot be lower than the current vehicle reading (${booking.vehicle_current_km} km).`,
         400
@@ -63,12 +75,12 @@ async function completeJobAndGenerateBill({
     // 3. Process Job Items
     // Alternate flow in UC-6: if no items are added, at least one item or labour is required.
     const itemsToInsert = [...jobItems];
-    if (labourCharge > 0) {
+    if (labour > 0) {
       itemsToInsert.push({
         item_type: 'LABOUR',
         description: 'Workshop Labour Charge',
         quantity: 1,
-        unit_price: labourCharge,
+        unit_price: labour,
       });
     }
 
@@ -76,21 +88,27 @@ async function completeJobAndGenerateBill({
       throw new AppError('At least one part or labour charge item is required to complete the job and generate a bill.', 400);
     }
 
-    let calculatedTotal = 0;
-
     for (const item of itemsToInsert) {
-      const qty = parseFloat(item.quantity) || 1.0;
-      const price = parseFloat(item.unit_price) || 0.0;
-      const type = item.item_type === 'LABOUR' ? 'LABOUR' : 'PART';
-      const desc = (item.description || 'Service Line Item').trim();
-
-      calculatedTotal += qty * price;
+      const qty = parseDecimal(item?.quantity ?? 1, 9999.99);
+      const price = parseDecimal(item?.unit_price, MAX_AMOUNT);
+      const type = item?.item_type === 'LABOUR' ? 'LABOUR' : 'PART';
+      const desc = typeof item?.description === 'string' ? item.description.trim() : '';
+      if (!(qty > 0) || !Number.isFinite(price) || qty * price > MAX_AMOUNT || !desc || desc.length > 255) {
+        throw new AppError('Each invoice item needs a description, positive quantity, and a valid non-negative price.', 400);
+      }
 
       await connection.execute(
         'INSERT INTO job_items (booking_id, item_type, description, quantity, unit_price) VALUES (?, ?, ?, ?, ?)',
         [bookingId, type, desc, qty, price]
       );
     }
+
+    const [[totals]] = await connection.execute(
+      'SELECT SUM(subtotal) AS total FROM job_items WHERE booking_id = ?',
+      [bookingId]
+    );
+    const calculatedTotal = Number(totals.total);
+    if (calculatedTotal > MAX_AMOUNT) throw new AppError('The invoice total is too large.', 400);
 
     // 4. Generate Unique Bill Number
     const year = new Date().getFullYear();
@@ -115,33 +133,17 @@ async function completeJobAndGenerateBill({
     );
 
     // 8. Update Component Maintenance Records (FR-25)
-    // Parse requested components or check items
-    let requestedNames = [];
-    if (booking.owner_notes) {
-      // Check if components were listed or infer
-    }
-
-    // Update matching or all serviced maintenance components for this vehicle
+    // Use confirmed service IDs or descriptions from the garage's billed work.
     const [mTypes] = await connection.execute('SELECT id, name FROM maintenance_types WHERE is_active = TRUE');
-    
-    // Find which types match line items or were requested
-    const touchedTypeIds = new Set(servicedTypeIds.map(Number));
-    const ownerNotesLower = (booking.owner_notes || '').toLowerCase();
+    const touchedTypeIds = new Set();
+    const confirmedIds = new Set(servicedTypeIds.map(Number));
+    const confirmedItems = itemsToInsert.map((item) => (item.description || '').toLowerCase());
 
-    for (const item of itemsToInsert) {
-      const descLower = item.description.toLowerCase();
-      for (const mt of mTypes) {
-        const rootName = mt.name.toLowerCase().replace(/s$/, ''); // e.g. 'brakes' -> 'brake'
-        if (descLower.includes(rootName) || ownerNotesLower.includes(rootName)) {
-          touchedTypeIds.add(mt.id);
-        }
+    for (const type of mTypes) {
+      const name = type.name.toLowerCase().replace(/s$/, '');
+      if (confirmedIds.has(type.id) || confirmedItems.some((description) => description.includes(name))) {
+        touchedTypeIds.add(type.id);
       }
-    }
-
-    // If General Service is present, update general service
-    const generalServiceType = mTypes.find((m) => m.name.toLowerCase().includes('general'));
-    if (generalServiceType && (ownerNotesLower.includes('general') || itemsToInsert.some(i => i.description.toLowerCase().includes('general')))) {
-      touchedTypeIds.add(generalServiceType.id);
     }
 
     // Update last_done_km and last_done_date for touched components (portable across MySQL & SQLite)

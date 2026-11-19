@@ -4,18 +4,18 @@ const fs = require('node:fs');
 const path = require('node:path');
 const vm = require('node:vm');
 const AppError = require('../src/utils/AppError');
-const { validateEmail } = require('../src/middleware/validate');
+const validators = require('../src/middleware/validate');
 
 // Exercise controllers and middleware with isolated database/crypto boundaries.
 // Actual MySQL, bcrypt and JWT integration must also be checked on the running server.
-function setup({ users = [], dbError, invalidToken = false, tokenId = 1 } = {}) {
+function setup({ users = [], dbError, invalidToken = false, tokenId = 1, mailConfigured = true } = {}) {
   const records = users.map(u => ({ ...u }));
   const pool = { async execute(sql, args) {
     if (dbError) throw dbError;
     if (sql.startsWith('INSERT INTO users')) {
       if (records.some(u => u.email === args[1])) throw Object.assign(new Error('duplicate'), { code: 'ER_DUP_ENTRY' });
       const id = records.length + 1;
-      records.push({ id, name: args[0], email: args[1], password_hash: args[2], role: args[3], phone: args[4], is_active: 1 });
+      records.push({ id, name: args[0], email: args[1], password_hash: args[2], role: args[3], phone: args[4], is_active: 1, email_verified_at: null });
       return [{ insertId: id }];
     }
     return [records.filter(u => sql.includes('WHERE email') ? u.email === args[0] : u.id === args[0])];
@@ -28,7 +28,9 @@ function setup({ users = [], dbError, invalidToken = false, tokenId = 1 } = {}) 
   const dependencies = {
     '../utils/cryptoHelper': { safeBcrypt: bcrypt, safeJwt: jwt }, '../config/db': pool,
     '../config/env': { jwt: { secret: 'test', expiresIn: '1d' } },
-    '../utils/AppError': AppError, '../middleware/validate': { validateEmail }, crypto: require('node:crypto'),
+    '../services/passwordResetMail': { getMailConfig: () => mailConfigured ? {} : null },
+    '../services/emailVerification': { sendVerification: async () => 'sent' },
+    '../utils/AppError': AppError, '../middleware/validate': validators, crypto: require('node:crypto'),
   };
   function load(relative) {
     const module = { exports: {} };
@@ -45,29 +47,44 @@ function setup({ users = [], dbError, invalidToken = false, tokenId = 1 } = {}) 
 async function invoke(handler, { body = {}, headers = {}, user } = {}) {
   let response, error, passed = false;
   const req = { body, headers, user };
-  const res = { status(code) { this.code = code; return this; }, json(data) { response = { code: this.code, ...data }; return this; } };
+  const res = { status(code) { this.code = code; return this; }, json(data) { response = { code: this.code, ...data, statusCode: this.code }; return this; } };
   await handler(req, res, err => { error = err; passed = !err; });
   return { response, error, passed, req };
 }
 const details = { name: '  Test Customer  ', email: ' TEST@example.com ', phone: '9876543210', password: 'Secure123' };
-const account = { id: 1, name: 'Customer', email: 'test@example.com', phone: '9876543210', password_hash: 'hashed:Secure123', role: 'CUSTOMER', is_active: 1 };
+const account = { id: 1, name: 'Customer', email: 'test@example.com', phone: '9876543210', password_hash: 'hashed:Secure123', role: 'CUSTOMER', is_active: 1, email_verified_at: new Date() };
 
-test('registration stores normalized customer, hashed password and expiring session', async () => {
+test('registration stores an unverified customer and issues no session', async () => {
   const { controller, records } = setup();
   const { response, error } = await invoke(controller.register, { body: details });
   assert.equal(error, undefined);
   assert.equal(response.code, 201);
-  assert.equal(response.user.email, 'test@example.com');
-  assert.equal(response.user.role, 'CUSTOMER');
-  assert.equal(response.user.password_hash, undefined);
+  assert.equal(response.verificationEmailSent, true);
+  assert.equal(response.token, undefined);
+  assert.equal(records[0].email, 'test@example.com');
+  assert.equal(records[0].role, 'CUSTOMER');
+  assert.equal(records[0].phone, '+919876543210');
+  assert.equal(records[0].email_verified_at, null);
   assert.equal(records[0].password_hash, 'hashed:Secure123');
-  assert.equal(JSON.parse(response.token).expiresIn, '1d');
 });
-test('new account can sign in, and wrong password is rejected', async () => {
-  const { controller } = setup();
+test('new account needs verification before sign-in', async () => {
+  const { controller, records } = setup();
   await invoke(controller.register, { body: details });
-  assert.equal((await invoke(controller.login, { body: details })).response.code, 200);
+  const blocked = await invoke(controller.login, { body: details });
+  assert.equal(blocked.response.statusCode, 403);
+  assert.equal(blocked.response.code, 'EMAIL_UNVERIFIED');
+  assert.equal(blocked.response.token, undefined);
+  records[0].email_verified_at = new Date();
+  const signedIn = await invoke(controller.login, { body: details });
+  assert.equal(signedIn.response.code, 200);
+  assert.equal(JSON.parse(signedIn.response.token).expiresIn, '1d');
   assert.equal((await invoke(controller.login, { body: { ...details, password: 'wrong' } })).error.statusCode, 401);
+});
+test('registration does not create an account without configured mail', async () => {
+  const { controller, records } = setup({ mailConfigured: false });
+  const { error } = await invoke(controller.register, { body: details });
+  assert.equal(error.statusCode, 503);
+  assert.equal(records.length, 0);
 });
 test('duplicate email returns conflict', async () => {
   const { controller } = setup({ users: [account] });
@@ -81,7 +98,7 @@ test('public registration cannot create privileged or unknown roles', async () =
   }
 });
 test('invalid inputs are rejected without storing a user', async () => {
-  for (const invalid of [{ name: ' ' }, { email: 'bad' }, { password: 'short' }, { password: 'é'.repeat(40) }, { password: 1234567 }, { phone: 'abc' }]) {
+  for (const invalid of [{ name: ' ' }, { email: 'bad' }, { email: 'a..b@example.com' }, { email: 'a@-example.com' }, { password: '1234567' }, { password: '        ' }, { password: 'é'.repeat(40) }, { password: 1234567 }, { phone: 'abc' }, { phone: '1234567890' }, { phone: '+919876543' }]) {
     const { controller, records } = setup();
     assert.equal((await invoke(controller.register, { body: { ...details, ...invalid } })).error.statusCode, 400);
     assert.equal(records.length, 0);
@@ -132,4 +149,11 @@ test('middleware rejects deleted, deactivated and malformed-token accounts', asy
     const { middleware } = setup(config);
     assert.equal((await invoke(middleware, { headers: { authorization: 'Bearer signed-token' } })).error.statusCode, 401);
   }
+});
+
+test('password reset reports unavailable mail without issuing a token', async () => {
+  const { controller } = setup({ users: [account], mailConfigured: false });
+  const { response, error } = await invoke(controller.forgotPassword, { body: { email: account.email } });
+  assert.equal(error.statusCode, 503);
+  assert.equal(response, undefined);
 });

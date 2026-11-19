@@ -5,7 +5,7 @@ export default function RegistrationOptions() {
   return (
     <nav aria-label="Account type" className="grid grid-cols-2 gap-1 rounded-xl bg-slate-100 p-1">
       {[
-        ['/register', 'User'],
+        ['/register', 'Customer'],
         ['/register-garage', 'Garage'],
       ].map(([path, label]) => (
         <NavLink

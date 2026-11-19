@@ -72,8 +72,7 @@ export default function CustomerBookings() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <p className="text-xs font-bold text-blue-600 uppercase tracking-wider">Service Appointments</p>
-          <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900">My Service Bookings</h1>
+          <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900">My bookings</h1>
           <p className="text-sm text-slate-500 mt-1">
             Track appointment approvals, workshop progress, and completed services.
           </p>

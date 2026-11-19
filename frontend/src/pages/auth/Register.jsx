@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import RegistrationOptions from './RegistrationOptions';
-import { useAuth } from '../../context/AuthContext';
+import { authApi } from '../../api/auth.api';
 import AuthLayout from './AuthLayout';
 import PasswordField from './PasswordField';
+import { passwordHint, phoneHint, registrationError } from './registrationValidation';
 
 export default function Register() {
-  const { register } = useAuth();
   const navigate = useNavigate();
 
   const [formData, setFormData] = useState({
@@ -31,26 +31,25 @@ export default function Register() {
     e.preventDefault();
     setError('');
 
-    if (formData.password.length < 6 || new TextEncoder().encode(formData.password).length > 72) {
-      setError('Use a password with at least 6 characters and no more than 72 bytes.');
-      return;
-    }
-
-    if (formData.password !== formData.confirmPassword) {
-      setError('Passwords do not match.');
+    const invalid = registrationError(formData);
+    if (invalid) {
+      setError(invalid);
       return;
     }
 
     setLoading(true);
 
     try {
-      await register({
+      const result = await authApi.register({
         name: formData.name.trim(),
         email: formData.email.trim(),
         password: formData.password,
         phone: formData.phone.trim(),
       });
-      navigate('/customer/dashboard', { replace: true });
+      navigate('/verify-email', {
+        replace: true,
+        state: { email: formData.email.trim(), emailSent: result.verificationEmailSent },
+      });
     } catch (err) {
       const msg = err.response?.data?.error || (err.response ? 'Registration failed. Please try again.' : 'Cannot reach the server. Check that the backend is running on port 5000.');
       setError(msg);
@@ -60,7 +59,7 @@ export default function Register() {
   };
 
   return (
-    <AuthLayout title="Create a user account" description="Track your vehicles, book services, and view invoices.">
+    <AuthLayout title="Create a customer account" description="Track your vehicles, book services, and view invoices.">
       <RegistrationOptions />
 
       {error && (
@@ -94,7 +93,7 @@ export default function Register() {
           <input
             type="email"
             id="register-email"
-            autoComplete="email"
+            autoComplete="section-customer username"
             name="email"
             required
             value={formData.email}
@@ -112,33 +111,34 @@ export default function Register() {
             id="register-phone"
             name="phone"
             type="tel"
-            autoComplete="tel"
+            autoComplete="section-customer tel"
             required
             value={formData.phone}
             onChange={handleChange}
-            minLength={7}
-            maxLength={20}
+            maxLength={32}
+            aria-describedby="customer-phone-requirements"
             className="auth-input"
           />
+          <p id="customer-phone-requirements" className="mt-1.5 text-sm text-slate-600">{phoneHint}</p>
         </div>
 
         <PasswordField
           id="register-password"
           name="password"
-          autoComplete="new-password"
+          autoComplete="section-customer new-password"
           required
-          minLength={6}
+          minLength={8}
           maxLength={72}
           aria-describedby="password-requirements"
           value={formData.password}
           onChange={handleChange}
         />
-        <p id="password-requirements" className="text-sm text-slate-600">Use at least 6 characters.</p>
+        <p id="password-requirements" className="text-sm text-slate-600">{passwordHint}</p>
         <PasswordField
           id="register-confirm"
           name="confirmPassword"
           label="Confirm password"
-          autoComplete="new-password"
+          autoComplete="section-customer new-password"
           required
           value={formData.confirmPassword}
           onChange={handleChange}

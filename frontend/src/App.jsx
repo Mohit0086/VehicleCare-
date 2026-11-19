@@ -9,6 +9,7 @@ import Home from './pages/Home';
 import Login from './pages/auth/Login';
 import Register from './pages/auth/Register';
 import RegisterGarage from './pages/auth/RegisterGarage';
+import VerifyEmail from './pages/auth/VerifyEmail';
 import GarageBookings from './pages/garage/GarageBookings';
 import ForgotPassword from './pages/auth/ForgotPassword';
 import ResetPassword from './pages/auth/ResetPassword';
@@ -212,6 +213,7 @@ function AppRoutes() {
           <Route path="/admin/login" element={<Login platformAdmin />} />
           <Route path="/register" element={<Register />} />
           <Route path="/register-garage" element={<RegisterGarage />} />
+          <Route path="/verify-email" element={<VerifyEmail />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/reset-password" element={<ResetPassword />} />
           <Route path="*" element={<Navigate to="/" replace />} />

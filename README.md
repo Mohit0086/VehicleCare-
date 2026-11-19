@@ -80,12 +80,12 @@ All accounts are provisioned with default passwords: `Admin@123` / `Customer@123
 
 ## 6. Verification & Automated Test Suite
 
-A comprehensive verification script validates all 49 SRS functional requirements and the project guide's recommendations:
+The backend verification script checks seeded authentication, maintenance status, reminders, booking transitions, billing, invoice PDFs, and prediction fallback:
 
 ```bash
 node backend/verify-backend.js
 ```
-Expected output: **31 / 31 CHECKS PASSED (100%)**
+Run this against a disposable MariaDB instance seeded by the scripts above. The verifier creates a booking and changes demo vehicle records. A successful run reports that every check passed.
 
 ---
 

@@ -206,10 +206,15 @@ const updateVehicle = async (req, res, next) => {
            model = COALESCE(?, model),
            year = COALESCE(?, year),
            fuel_type = COALESCE(?, fuel_type),
-           insurance_expiry = ?,
-           puc_expiry = ? 
+           insurance_expiry = IF(?, ?, insurance_expiry),
+           puc_expiry = IF(?, ?, puc_expiry)
        WHERE id = ?`,
-      [brand, model, year ? parseInt(year, 10) : null, fuel_type, insurance_expiry || null, puc_expiry || null, id]
+      [
+        brand ?? null, model ?? null, year ? parseInt(year, 10) : null, fuel_type ?? null,
+        insurance_expiry !== undefined, insurance_expiry || null,
+        puc_expiry !== undefined, puc_expiry || null,
+        id,
+      ]
     );
 
     res.status(200).json({ message: 'Vehicle updated successfully.' });
@@ -330,21 +335,16 @@ const updateOdometer = async (req, res, next) => {
 
 // Get maintenance status per component (FR-11 to FR-15)
 const getVehicleMaintenance = async (req, res, next) => {
-  const { id } = req.params;
+  const vehicle = req.vehicle;
 
   try {
-    const [vehicles] = await pool.execute('SELECT id, user_id, current_km FROM vehicles WHERE id = ?', [id]);
-    if (vehicles.length === 0) return next(new AppError('Vehicle not found.', 404));
-
-    const vehicle = vehicles[0];
-
     const [components] = await pool.execute(
       `SELECT vm.*, mt.name, mt.description, mt.default_interval_km, mt.default_interval_months 
        FROM vehicle_maintenance vm 
        JOIN maintenance_types mt ON vm.maintenance_type_id = mt.id 
        WHERE vm.vehicle_id = ? 
        ORDER BY mt.id ASC`,
-      [id]
+      [vehicle.id]
     );
 
     const { overallStatus, components: evaluated } = calculateVehicleStatus(components, vehicle.current_km);

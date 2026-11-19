@@ -62,7 +62,7 @@ const promptDiagnosticScan = async (req, res, next) => {
   try {
     const result = await promptScanCustomerVehicles(req.user.id);
     res.status(200).json({
-      message: `Diagnostic complete! Scanned ${result.scannedVehicles} vehicles. Generated ${result.newAlerts} prompt alerts.`,
+      message: `Checked ${result.scannedVehicles} ${result.scannedVehicles === 1 ? 'vehicle' : 'vehicles'}. ${result.newAlerts} new ${result.newAlerts === 1 ? 'reminder' : 'reminders'}.`,
       ...result,
     });
   } catch (err) {

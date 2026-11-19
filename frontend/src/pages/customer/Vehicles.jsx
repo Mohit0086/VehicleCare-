@@ -99,10 +99,9 @@ export default function CustomerVehicles() {
       {/* Title & Add Button */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <p className="text-xs font-bold text-blue-600 uppercase tracking-wider">Garage Management</p>
-          <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900">My Vehicles</h1>
+          <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900">My garage</h1>
           <p className="text-sm text-slate-500 mt-1">
-            Registered vehicles, real-time maintenance health, and odometer tracking.
+            View your vehicles and update their odometers.
           </p>
         </div>
         <button
@@ -223,7 +222,7 @@ export default function CustomerVehicles() {
         <div className="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center p-4">
           <div className="bg-white rounded-3xl max-w-lg w-full p-6 sm:p-8 shadow-xl border border-slate-200 animate-in fade-in zoom-in-95 duration-150">
             <div className="flex items-center justify-between pb-3 border-b border-slate-100">
-              <h2 className="text-lg font-bold text-slate-900">Add Vehicle to Garage</h2>
+              <h2 className="text-lg font-bold text-slate-900">Add a vehicle</h2>
               <button
                 onClick={() => setModalOpen(false)}
                 className="p-1 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100"

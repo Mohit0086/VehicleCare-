@@ -49,10 +49,9 @@ export function AuthProvider({ children }) {
   };
 
   const login = async (email, password, accountType) => saveSession(await authApi.login({ email, password, accountType }));
-  const register = async (details) => saveSession(await authApi.register({ ...details, role: 'CUSTOMER' }));
   const role = user?.role || null;
 
-  return <AuthContext.Provider value={{ user, token, loading, login, register, logout: clearSession,
+  return <AuthContext.Provider value={{ user, token, loading, login, logout: clearSession,
     isAuthenticated: !!token && !!user,
     // Legacy page branches remain disabled; authentication always requires the API.
     isPreview: false, role, isAdmin: role === 'ADMIN', isCustomer: role === 'CUSTOMER',

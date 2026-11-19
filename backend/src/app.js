@@ -19,6 +19,7 @@ const documentController = require('./controllers/document.controller');
 const predictionController = require('./controllers/prediction.controller');
 const authenticateToken = require('./middleware/auth');
 const requireRole = require('./middleware/role');
+const requireVehicleAccess = require('./middleware/vehicleAccess');
 const vehicleAccess = requireRole('CUSTOMER', 'ADMIN');
 
 const app = express();
@@ -47,7 +48,7 @@ app.use('/api/maintenance', maintenanceRoutes);
 app.get('/api/service-centers', bookingController.listServiceCenters);
 app.get('/api/documents/:id/download', authenticateToken, vehicleAccess, documentController.downloadDocument);
 app.delete('/api/documents/:id', authenticateToken, vehicleAccess, documentController.deleteDocument);
-app.get('/api/vehicles/:id/prediction', authenticateToken, vehicleAccess, predictionController.getVehiclePrediction);
+app.get('/api/vehicles/:id/prediction', authenticateToken, vehicleAccess, requireVehicleAccess, predictionController.getVehiclePrediction);
 
 // 404 Handler for undefined routes
 app.all('*', (req, res, next) => {

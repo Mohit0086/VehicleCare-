@@ -13,10 +13,10 @@ module.exports = async function authenticateToken(req, res, next) {
   catch { return next(new AppError('Invalid or expired authentication token.', 401)); }
   if (!payload || !Number.isInteger(payload.id)) return next(new AppError('Invalid authentication token.', 401));
   try {
-    const [rows] = await pool.execute('SELECT id, email, name, role, is_active FROM users WHERE id = ?', [payload.id]);
+    const [rows] = await pool.execute('SELECT id, email, name, role, is_active, email_verified_at FROM users WHERE id = ?', [payload.id]);
     const user = rows[0];
     const role = { ADMIN: 'ADMIN', CUSTOMER: 'CUSTOMER', OWNER: 'CUSTOMER', MECHANIC: 'ADMIN', GARAGE: 'GARAGE' }[user?.role];
-    if (!user || !user.is_active || !role) return next(new AppError('Your account is unavailable. Please sign in again.', 401));
+    if (!user || !user.is_active || !user.email_verified_at || !role) return next(new AppError('Your account is unavailable. Please sign in again.', 401));
     req.user = { id: user.id, email: user.email, name: user.name, role };
     return next();
   } catch (err) { return next(err); }

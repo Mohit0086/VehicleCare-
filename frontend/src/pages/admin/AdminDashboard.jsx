@@ -76,12 +76,9 @@ export default function AdminDashboard() {
       {/* Top Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <span className="text-xs font-bold uppercase tracking-wider text-blue-600 bg-blue-50 px-2.5 py-1 rounded-md">
-            System Administration
-          </span>
-          <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 mt-2">Platform Oversight</h1>
+          <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 mt-2">Admin dashboard</h1>
           <p className="text-sm text-slate-500 mt-1">
-            Real-time analytics for customer service bookings, workshop revenue, and vehicle maintenance status.
+            Review bookings, invoices, and maintenance activity.
           </p>
         </div>
 

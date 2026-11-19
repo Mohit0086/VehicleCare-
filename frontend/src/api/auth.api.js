@@ -13,6 +13,10 @@ export const authApi = {
 
   registerGarage: async (details) => (await api.post('/auth/register-garage', details)).data,
 
+  verifyEmail: async (details) => (await api.post('/auth/verify-email', details)).data,
+
+  resendVerification: async (email) => (await api.post('/auth/resend-verification', { email })).data,
+
   getGarage: async () => (await api.get('/auth/garage')).data,
 
   getProfile: async () => {

@@ -20,22 +20,16 @@ const listTypes = async (req, res, next) => {
 
 // Get maintenance status for a vehicle
 const getMaintenanceByVehicle = async (req, res, next) => {
-  const { vehicleId } = req.params;
+  const vehicle = req.vehicle;
 
   try {
-    const [vehicles] = await pool.execute('SELECT id, current_km FROM vehicles WHERE id = ?', [vehicleId]);
-    if (vehicles.length === 0) {
-      return res.status(404).json({ error: 'Vehicle not found.' });
-    }
-
-    const vehicle = vehicles[0];
     const [components] = await pool.execute(
       `SELECT vm.*, mt.name, mt.description, mt.default_interval_km, mt.default_interval_months 
        FROM vehicle_maintenance vm 
        JOIN maintenance_types mt ON vm.maintenance_type_id = mt.id 
        WHERE vm.vehicle_id = ? 
        ORDER BY mt.id ASC`,
-      [vehicleId]
+      [vehicle.id]
     );
 
     const { overallStatus, components: evaluated } = calculateVehicleStatus(components, vehicle.current_km);

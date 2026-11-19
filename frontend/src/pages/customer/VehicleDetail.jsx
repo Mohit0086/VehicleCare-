@@ -19,6 +19,7 @@ import {
 } from 'lucide-react';
 import { vehicleApi } from '../../api/vehicle.api';
 import { documentApi } from '../../api/document.api';
+import EstimateSummary from '../../components/EstimateSummary';
 import { predictionApi } from '../../api/prediction.api';
 
 export default function CustomerVehicleDetail() {
@@ -250,7 +251,7 @@ export default function CustomerVehicleDetail() {
           { key: 'maintenance', label: 'Component Health', icon: Wrench },
           { key: 'history', label: 'Service History', icon: History },
           { key: 'odometer', label: 'Odometer Audit', icon: Gauge },
-          { key: 'prediction', label: 'AI Health Prediction', icon: Activity },
+          { key: 'prediction', label: 'Maintenance estimates', icon: Activity },
           { key: 'documents', label: 'Documents', icon: FileText },
         ].map((tab) => {
           const Icon = tab.icon;
@@ -278,7 +279,7 @@ export default function CustomerVehicleDetail() {
           <div className="p-5 border-b border-slate-100 bg-slate-50/50">
             <h3 className="font-bold text-slate-900 text-base">Tracked Vehicle Components (8 Core Systems)</h3>
             <p className="text-xs text-slate-500 mt-0.5">
-              Status calculated from last service distance and elapsed months (SRS FR-11 to FR-15).
+              Based on distance driven and time since the last recorded service.
             </p>
           </div>
 
@@ -390,7 +391,7 @@ export default function CustomerVehicleDetail() {
       {activeTab === 'odometer' && (
         <div className="bg-white rounded-3xl border border-slate-200 overflow-hidden shadow-sm">
           <div className="p-5 border-b border-slate-100 bg-slate-50/50">
-            <h3 className="font-bold text-slate-900 text-base">Immutable Odometer History (FR-10)</h3>
+            <h3 className="font-bold text-slate-900 text-base">Odometer history</h3>
             <p className="text-xs text-slate-500">Every change is audited with timestamp, reading, and source.</p>
           </div>
           <div className="overflow-x-auto">
@@ -422,53 +423,11 @@ export default function CustomerVehicleDetail() {
         </div>
       )}
 
-      {/* TAB 4: AI PREDICTION */}
       {activeTab === 'prediction' && (
-        <div className="bg-white rounded-3xl border border-slate-200 p-6 sm:p-8 shadow-sm space-y-6">
-          <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center shrink-0">
-              <Activity size={24} />
-            </div>
-            <div>
-              <h3 className="text-lg font-bold text-slate-900">AI Predictive Maintenance Analysis</h3>
-              <p className="text-xs text-slate-500">
-                Trained regression models forecasting upcoming wear intervals and approximate workshop bills.
-              </p>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <div className="p-5 rounded-2xl bg-blue-50/50 border border-blue-100">
-              <span className="text-xs font-bold text-blue-700 uppercase">Estimated Next Oil Change</span>
-              <p className="text-2xl font-black text-slate-900 mt-2">
-                ~{prediction ? prediction.oil_change_km : 1500} km
-              </p>
-              <p className="text-[11px] text-slate-500 mt-1">Based on monthly rate & engine cycle.</p>
-            </div>
-
-            <div className="p-5 rounded-2xl bg-indigo-50/50 border border-indigo-100">
-              <span className="text-xs font-bold text-indigo-700 uppercase">Brake Pad Inspection</span>
-              <p className="text-2xl font-black text-slate-900 mt-2">
-                ~{prediction ? prediction.brake_inspection_km : 6500} km
-              </p>
-              <p className="text-[11px] text-slate-500 mt-1">Projected pad & rotor wear forecast.</p>
-            </div>
-
-            <div className="p-5 rounded-2xl bg-emerald-50/50 border border-emerald-100">
-              <span className="text-xs font-bold text-emerald-700 uppercase">Forecasted Service Bill</span>
-              <p className="text-2xl font-black text-slate-900 mt-2">
-                ₹{prediction ? Number(prediction.estimated_cost).toLocaleString('en-IN') : '4,800'}
-              </p>
-              <p className="text-[11px] text-slate-500 mt-1">Estimated parts and routine labour.</p>
-            </div>
-          </div>
-
-          <div className="p-4 bg-slate-50 rounded-2xl border border-slate-200 text-xs text-slate-500">
-            💡 <strong>Model Insights:</strong> {prediction?.fallback
-              ? 'Showing heuristic fallback status because the Flask ML service is offline.'
-              : 'Estimates computed by the scikit-learn MultiOutput regression pipeline.'}
-          </div>
-        </div>
+        <section className="space-y-4 rounded-2xl border border-slate-200 bg-white p-5 sm:p-6">
+          <h3 className="text-lg font-semibold text-slate-900">Maintenance estimates</h3>
+          <EstimateSummary prediction={prediction} fuelType={vehicle.fuel_type} />
+        </section>
       )}
 
       {/* TAB 5: DOCUMENTS */}

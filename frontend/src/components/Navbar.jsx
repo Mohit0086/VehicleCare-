@@ -31,15 +31,15 @@ const roleLinks = {
     ['Invoices', '/customer/invoices', ReceiptText],
     ['Maintenance estimates', '/customer/predictions', Activity],
     ['Documents', '/customer/documents', FileText],
-    ['Alerts & Reminders', '/customer/reminders', BellRing],
+    ['Reminders', '/customer/reminders', BellRing],
   ],
   GARAGE: [['Bookings', '/garage/bookings', Wrench]],
   ADMIN: [
     ['Dashboard', '/admin/dashboard', LayoutDashboard],
-    ['Workshop Queue & Billing', '/admin/bookings', Wrench],
-    ['Customer Management', '/admin/customers', Users],
+    ['Workshop bookings', '/admin/bookings', Wrench],
+    ['Customers', '/admin/customers', Users],
     ['Service Intervals', '/admin/intervals', Settings2],
-    ['Service Centers', '/admin/centers', Building2],
+    ['Workshops', '/admin/centers', Building2],
   ],
 };
 
@@ -78,7 +78,7 @@ export default function Navbar({ children }) {
               Sign in
             </Link>
             <Link className="button button-primary button-sm" to="/register">
-              Get started
+              Create account
             </Link>
           </div>
         </header>

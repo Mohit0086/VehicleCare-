@@ -119,11 +119,11 @@ export default function NotificationDropdown({ customerTools = true }) {
                 type="button"
                 onClick={runPromptDiagnosticScan}
                 disabled={scanning}
-                title="Run immediate health check on your vehicles"
+                title="Check your records for maintenance and document reminders"
                 className="text-xs text-blue-600 hover:text-blue-800 font-medium flex items-center gap-1 hover:underline disabled:opacity-50"
               >
                 <RefreshCw size={12} className={scanning ? 'animate-spin' : ''} />
-                {scanning ? 'Scanning…' : 'Prompt scan'}
+                {scanning ? 'Scanning…' : 'Check for reminders'}
               </button>}
               {unreadCount > 0 && (
                 <button
@@ -146,7 +146,7 @@ export default function NotificationDropdown({ customerTools = true }) {
               <div className="p-8 text-center">
                 <CheckCircle2 size={32} className="mx-auto text-emerald-500 mb-2 opacity-80" />
                 <p className="text-sm font-semibold text-slate-800">You're all caught up!</p>
-                <p className="text-xs text-slate-500 mt-1">Maintenance alerts and booking updates will appear here promptly.</p>
+                <p className="text-xs text-slate-500 mt-1">Booking updates and reminders appear here.</p>
               </div>
             ) : (
               reminders.slice(0, 8).map((r) => {
@@ -200,7 +200,7 @@ export default function NotificationDropdown({ customerTools = true }) {
               onClick={() => setOpen(false)}
               className="text-xs text-slate-700 hover:text-blue-700 font-semibold"
             >
-              View all alerts & reminders →
+              View reminders →
             </Link>
           </div>}
         </div>

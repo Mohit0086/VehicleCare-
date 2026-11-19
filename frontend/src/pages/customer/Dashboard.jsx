@@ -83,14 +83,11 @@ export default function CustomerDashboard() {
       {/* Welcome Banner */}
       <div className="garage-banner bg-gradient-to-r from-blue-700 via-blue-800 to-indigo-900 rounded-3xl p-6 sm:p-8 text-white shadow-md flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
-          <span className="text-xs font-semibold tracking-wider text-blue-200 uppercase bg-blue-900/50 px-3 py-1 rounded-full">
-            Customer Garage
-          </span>
           <h1 className="text-2xl sm:text-3xl font-extrabold mt-2">
             Welcome back, {user?.name?.split(' ')[0] || 'there'}!
           </h1>
           <p className="text-blue-100 text-sm mt-1">
-            Track maintenance, receive prompt reminders, and schedule workshop visits.
+            Review what’s due and check your upcoming bookings.
           </p>
         </div>
         <Link
@@ -240,7 +237,7 @@ export default function CustomerDashboard() {
 
           {/* Quick Actions Card */}
           <div className="bg-slate-900 text-white rounded-3xl p-6 shadow-sm space-y-3">
-            <h3 className="font-bold text-sm text-slate-100">Quick Tools</h3>
+            <h3 className="font-bold text-sm text-slate-100">Shortcuts</h3>
             <div className="space-y-2 text-xs">
               <Link
                 to="/customer/vehicles"
@@ -267,7 +264,7 @@ export default function CustomerDashboard() {
                 to="/customer/documents"
                 className="flex items-center justify-between p-2.5 bg-slate-800/80 hover:bg-slate-800 rounded-xl transition"
               >
-                <span className="flex items-center gap-2"><FileCheck2 size={15} /> Upload Insurance/PUC</span>
+                <span className="flex items-center gap-2"><FileCheck2 size={15} /> Vehicle documents</span>
                 <ArrowRight size={14} className="text-slate-400" />
               </Link>
             </div>

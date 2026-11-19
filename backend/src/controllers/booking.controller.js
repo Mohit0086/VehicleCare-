@@ -13,6 +13,13 @@ const { STANDARD_SLOTS, isValidTransition, isSlotAvailable, getSlotAvailability 
 const { completeJobAndGenerateBill } = require('../services/billingService');
 const { createPromptNotification, notifyAdmins } = require('../services/reminderService');
 
+function isBookingDate(value) {
+  if (typeof value !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
+  const date = new Date(`${value}T00:00:00Z`);
+  const today = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' });
+  return !Number.isNaN(date.getTime()) && date.toISOString().slice(0, 10) === value && value >= today;
+}
+
 // List bookings with role scoping & status filters
 const listBookings = async (req, res, next) => {
   const { status } = req.query;
@@ -132,8 +139,8 @@ const createBooking = async (req, res, next) => {
     return next(new AppError('Enter valid service components and booking notes.', 400));
   }
 
-  if (!vehicle_id || !/^\d{4}-\d{2}-\d{2}$/.test(booking_date) || !STANDARD_SLOTS.includes(time_slot)) {
-    return next(new AppError('Vehicle, booking date, and time slot are required.', 400));
+  if (!vehicle_id || !isBookingDate(booking_date) || !STANDARD_SLOTS.includes(time_slot)) {
+    return next(new AppError('Choose a vehicle, a valid date from today onward, and an available time slot.', 400));
   }
 
   try {
@@ -187,7 +194,7 @@ const createBooking = async (req, res, next) => {
       userId: req.user.id,
       vehicleId: vehicle.id,
       reminderType: REMINDER_TYPES.BOOKING_UPDATE,
-      message: `Appointment request #${bookingId} received. Workshop will inspect ${vehicle.reg_no} on ${booking_date} at ${time_slot}.`,
+      message: `Request #${bookingId} for ${vehicle.reg_no} is awaiting workshop confirmation. Requested time: ${booking_date}, ${time_slot}.`,
       dueDate: booking_date,
     });
 
@@ -211,7 +218,7 @@ const createBooking = async (req, res, next) => {
     );
 
     res.status(201).json({
-      message: 'Service appointment booked successfully. Workshop notified.',
+      message: 'Booking requested. The workshop still needs to accept it.',
       booking: {
         id: bookingId,
         vehicle_id,
@@ -296,7 +303,7 @@ const updateBookingStatus = async (req, res, next) => {
         bookingId: id,
         mechanicUserId: req.user.id,
         garageOwnerId: isGarage ? req.user.id : null,
-        odometerAtService: odometer_at_service || booking.odometer_at_service,
+        odometerAtService: odometer_at_service ?? booking.odometer_at_service,
         mechanicNotes: mechanic_notes,
         jobItems: job_items,
         labourCharge: labour_charge,
@@ -361,8 +368,8 @@ const updateBookingStatus = async (req, res, next) => {
 const getSlots = async (req, res, next) => {
   let { service_center_id, booking_date } = req.query;
 
-  if (!booking_date) {
-    return next(new AppError('booking_date is required.', 400));
+  if (!isBookingDate(booking_date)) {
+    return next(new AppError('Choose a valid date from today onward.', 400));
   }
 
   try {

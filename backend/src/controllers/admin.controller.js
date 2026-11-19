@@ -15,6 +15,7 @@ const getDashboardMetrics = async (req, res, next) => {
     const [[bookingCount]] = await pool.execute('SELECT COUNT(*) as total FROM bookings');
     const [[completedCount]] = await pool.execute("SELECT COUNT(*) as total FROM bookings WHERE status = 'COMPLETED'");
     const [[pendingCount]] = await pool.execute("SELECT COUNT(*) as total FROM bookings WHERE status = 'PENDING'");
+    const [[acceptedCount]] = await pool.execute("SELECT COUNT(*) as total FROM bookings WHERE status = 'ACCEPTED'");
     const [[inProgressCount]] = await pool.execute("SELECT COUNT(*) as total FROM bookings WHERE status = 'IN_PROGRESS'");
     const [[rejectedCount]] = await pool.execute("SELECT COUNT(*) as total FROM bookings WHERE status = 'REJECTED'");
 
@@ -53,6 +54,7 @@ const getDashboardMetrics = async (req, res, next) => {
     const bookingStatus = [
       { name: 'Completed', value: completedCount.total },
       { name: 'Pending', value: pendingCount.total },
+      { name: 'Accepted', value: acceptedCount.total },
       { name: 'In progress', value: inProgressCount.total },
       { name: 'Rejected', value: rejectedCount.total },
     ];
@@ -174,6 +176,16 @@ const updateCenter = async (req, res, next) => {
   }
 
   try {
+    if (is_active) {
+      const [[owner]] = await pool.execute(
+        `SELECT u.email_verified_at FROM service_centers sc
+         JOIN users u ON u.id = sc.user_id WHERE sc.id = ?`,
+        [id]
+      );
+      if (owner && !owner.email_verified_at) {
+        return next(new AppError('The garage owner must verify their email before approval.', 409));
+      }
+    }
     const [result] = await pool.execute(
       `UPDATE service_centers 
        SET is_active = COALESCE(?, is_active),

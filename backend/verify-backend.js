@@ -9,11 +9,11 @@
 
 const db = require('./src/config/db');
 const { calculateComponentStatus } = require('./src/services/statusService');
-const { isSlotAvailable, getSlotAvailability, isValidTransition } = require('./src/services/bookingService');
+const { getSlotAvailability, isValidTransition } = require('./src/services/bookingService');
 const { completeJobAndGenerateBill } = require('./src/services/billingService');
-const { promptScanCustomerVehicles, createPromptNotification } = require('./src/services/reminderService');
+const { promptScanCustomerVehicles } = require('./src/services/reminderService');
 const { buildFeaturesForVehicle } = require('./src/services/featureService');
-const { predictMaintenance, getRuleBasedFallbackPrediction } = require('./src/services/mlClient');
+const { getRuleBasedFallbackPrediction } = require('./src/services/mlClient');
 const { generateInvoicePdf } = require('./src/utils/pdfInvoice');
 const { safeBcrypt, safeJwt } = require('./src/utils/cryptoHelper');
 
@@ -37,14 +37,14 @@ async function runVerification() {
   console.log('  Department of CSE, SISTec Bhopal (RGPV)');
   console.log('================================================================\n');
 
-  // Wait briefly for SQLite / MySQL connection initialization
-  await new Promise((r) => setTimeout(r, 400));
-
   // -------------------------------------------------------------
   // Test 1: User Roles and Authentication (FR-1 to FR-5, FR-44, FR-45)
   // -------------------------------------------------------------
   console.log('[Phase 1] Validating Two User Roles & Authentication (FR-1 - FR-5)');
-  const [users] = await db.execute('SELECT id, name, email, role FROM users ORDER BY id ASC');
+  const [users] = await db.execute(
+    'SELECT id, name, email, phone, role, password_hash FROM users WHERE email IN (?, ?) ORDER BY id ASC',
+    ['admin@vehiclecare.com', 'owner@example.com']
+  );
   assert(users.length >= 2, `Seeded users exist (found ${users.length})`);
 
   const adminUser = users.find((u) => u.role === 'ADMIN');
@@ -52,8 +52,9 @@ async function runVerification() {
   assert(!!adminUser, `ADMIN role provisioned: ${adminUser?.email}`);
   assert(!!customerUser, `CUSTOMER role provisioned: ${customerUser?.email}`);
 
-  const pwMatch = await safeBcrypt.compare('Admin@123', '$2b$10$K9Wn0E8j3F6qL8mB5zN3.e6Lz5B3R2T9vO7W4pA1C8vY3Z9j3m112');
-  assert(pwMatch, 'Bcrypt password hash comparison succeeds (FR-2, FR-3)');
+  if (!adminUser || !customerUser) throw new Error('Import the demo seed into a disposable database before verification.');
+  assert(await safeBcrypt.compare('Admin@123', adminUser.password_hash), 'Seeded administrator password works');
+  assert(await safeBcrypt.compare('Customer@123', customerUser.password_hash), 'Seeded customer password works');
 
   const testJwt = safeJwt.sign({ id: customerUser.id, role: customerUser.role }, 'test_secret');
   const verifiedJwt = safeJwt.verify(testJwt, 'test_secret');
@@ -108,7 +109,8 @@ async function runVerification() {
   const [centers] = await db.execute('SELECT id, name, slot_capacity FROM service_centers LIMIT 1');
   assert(centers.length > 0, `Workshop center available: ${centers[0]?.name}`);
 
-  const slotStatus = await getSlotAvailability(centers[0].id, '2026-11-25');
+  if (!centers.length) throw new Error('Seed workshop is missing.');
+  const slotStatus = await getSlotAvailability(centers[0].id, new Date(Date.now() + 86400000).toISOString().slice(0, 10));
   assert(slotStatus.length === 4, 'Standard 4 workshop time slots generated with capacity metrics (FR-17)');
   assert(slotStatus[0].available === true, 'Initial slot availability is open');
 
@@ -122,7 +124,7 @@ async function runVerification() {
   // -------------------------------------------------------------
   console.log('\n[Phase 5] Validating Billing, Component Sync & PDF Generation (FR-24 - FR-27)');
   const [testBookingRes] = await db.execute(
-    "INSERT INTO bookings (vehicle_id, service_center_id, user_id, booking_date, time_slot, status, owner_notes) VALUES (1, 1, ?, '2026-11-26', '14:00-16:00', 'IN_PROGRESS', 'Periodic general inspection')",
+    "INSERT INTO bookings (vehicle_id, service_center_id, user_id, booking_date, time_slot, status, owner_notes) VALUES (1, 1, ?, DATE_ADD(CURDATE(), INTERVAL 1 DAY), '14:00-16:00', 'IN_PROGRESS', 'Requested: Brakes and General Service')",
     [customerUser.id]
   );
   const testBookingId = testBookingRes.insertId;
@@ -153,9 +155,20 @@ async function runVerification() {
   );
   assert(updatedOil[0].last_done_km === 20500, 'Engine Oil last_done_km updated to 20500 km (FR-25)');
 
+  const [[brakes]] = await db.execute(
+    `SELECT vm.last_done_km FROM vehicle_maintenance vm
+     JOIN maintenance_types mt ON mt.id = vm.maintenance_type_id
+     WHERE vm.vehicle_id = 1 AND mt.name = 'Brakes'`
+  );
+  assert(brakes.last_done_km === 10000, 'Requested but unperformed brake work leaves maintenance history unchanged');
+
+  const [items] = await db.execute('SELECT * FROM job_items WHERE booking_id = ?', [testBookingId]);
   const pdfBuffer = await generateInvoicePdf({
+    user: customerUser,
+    booking: { id: testBookingId, odometer_at_service: 20500 },
+    items,
     bill: { bill_no: billingResult.billNo, total_amount: billingResult.totalAmount, generated_at: new Date() },
-    vehicle: { brand: 'Hyundai', model: 'Creta', reg_no: 'RJ14-AB-1234' },
+    vehicle: { brand: 'Hyundai', model: 'Creta', reg_no: 'RJ14-AB-1234', year: 2022, fuel_type: 'PETROL' },
     serviceCenter: centers[0],
   });
   assert(pdfBuffer.length > 100, `PDF invoice generated (${pdfBuffer.length} bytes, FR-27)`);
@@ -179,11 +192,11 @@ async function runVerification() {
   // Summary
   // -------------------------------------------------------------
   console.log('\n================================================================');
-  console.log(`  VERIFICATION COMPLETE: ${passedTests} / ${totalTests} CHECKS PASSED (100%)`);
+  console.log(`  VERIFICATION COMPLETE: ${passedTests} / ${totalTests} CHECKS PASSED`);
   console.log('================================================================');
 }
 
 runVerification().catch((err) => {
   console.error('[Verification Fatal Error]', err);
-  process.exit(1);
-});
+  process.exitCode = 1;
+}).finally(() => db.end());

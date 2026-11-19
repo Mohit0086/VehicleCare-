@@ -32,6 +32,11 @@ const env = {
     secret: process.env.JWT_SECRET || 'vehiclecare_jwt_default_secret_key',
     expiresIn: process.env.JWT_EXPIRES_IN || '1d',
   },
+  passwordReset: {
+    appUrl: process.env.PUBLIC_APP_URL,
+    from: process.env.RESET_MAIL_FROM,
+    sendmailPath: process.env.RESET_SENDMAIL_PATH || '/usr/sbin/sendmail',
+  },
   mlServiceUrl: process.env.ML_SERVICE_URL || 'http://localhost:6000',
 };
 
